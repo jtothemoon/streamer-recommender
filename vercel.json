@@ -1,8 +1,9 @@
 {
-    "cron": [
+    "crons": [
       {
         "path": "/api/cron/collect-streamers",
         "schedule": "0 16 * * *"
       }
     ]
   }
+  
