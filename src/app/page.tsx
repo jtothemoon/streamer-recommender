@@ -21,7 +21,7 @@ export default function Home() {
   const [results, setResults] = useState<Streamer[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const keywords = ["FPS", "LOL", "고수", "재밌는", "소통 잘함"];
+  const keywords = ["LOL", "피파", "발로란트", "게임 방송"];
 
   const toggleKeyword = (keyword: string) => {
     setSelectedKeywords((prev) =>
