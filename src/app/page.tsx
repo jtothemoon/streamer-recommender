@@ -104,10 +104,10 @@ export default function Home() {
             <button
               key={keyword}
               onClick={() => toggleKeyword(keyword)}
-              className={`px-4 py-1 rounded-full border text-sm ${
+              className={`px-4 py-1 rounded-full border text-sm transition-colors duration-200 ${
                 selectedKeywords.includes(keyword)
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-100 text-gray-700"
+                  ? "bg-[#00C7AE] text-white border-[#00C7AE]"
+                  : "bg-transparent text-gray-600 border-gray-300 hover:bg-gray-100"
               }`}
             >
               {keyword}
@@ -216,10 +216,27 @@ export default function Home() {
                   <p className="text-xs text-gray-500 text-center mt-1">
                     {s.description}
                   </p>
-                  <div className="text-xs text-gray-400 text-center mt-1">
-                    🎮 {s.platform.toUpperCase()}
-                    {s.gender !== "unknown" && <>&nbsp;|&nbsp; 🚻 {s.gender}</>}
+                  <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mt-1">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                      className="text-red-500"
+                    >
+                      <path d="M23.498 6.186a2.99 2.99 0 0 0-2.107-2.116C19.412 3.5 12 3.5 12 3.5s-7.412 0-9.391.57A2.99 2.99 0 0 0 .502 6.186 29.838 29.838 0 0 0 0 12c0 2.007.127 3.959.502 5.814a2.99 2.99 0 0 0 2.107 2.116c1.979.57 9.391.57 9.391.57s7.412 0 9.391-.57a2.99 2.99 0 0 0 2.107-2.116c.375-1.855.502-3.807.502-5.814s-.127-3.959-.502-5.814zM9.75 15.02V8.98l6.5 3.02-6.5 3.02z" />
+                    </svg>
+                    <span>YOUTUBE</span>
+
+                    {s.gender !== "unknown" && (
+                      <>
+                        <span className="mx-1 text-gray-300">|</span> 🚻{" "}
+                        {s.gender}
+                      </>
+                    )}
                   </div>
+
                   <a
                     href={s.channel_url}
                     target="_blank"
