@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           rel="stylesheet"
         />
       </head>
-      <body className="flex flex-col min-h-screen font-sans text-[#111111] bg-white">
+      <body className="flex flex-col min-h-screen font-sans text-[#111111] dark:text-gray-200 bg-white dark:bg-[#111111]">
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

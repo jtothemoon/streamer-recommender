@@ -137,7 +137,7 @@ export default function Home() {
               className={`px-4 py-1 rounded-full border text-sm transition-colors duration-200 ${
                 selectedKeywords.includes(keyword)
                   ? "bg-[#00C7AE] text-white border-[#00C7AE]"
-                  : "bg-transparent text-gray-600 border-gray-300 hover:bg-gray-100"
+                  : "bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
               }`}
             >
               {keyword}
@@ -194,8 +194,8 @@ export default function Home() {
       <div className="mt-8">
         <button
           onClick={fetchStreamers}
-          className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
-          disabled={loading} // 로딩 중일 때 버튼 비활성화
+          className="bg-black text-white dark:bg-gray-200 dark:text-black px-6 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors flex items-center justify-center gap-2"
+          disabled={loading}
         >
           {loading ? (
             <>
@@ -227,7 +227,7 @@ export default function Home() {
                 return (
                   <div
                     key={s.id}
-                    className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white"
+                    className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white dark:bg-[#1a1a1a]"
                   >
                     {isNew && (
                       <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
@@ -245,15 +245,15 @@ export default function Home() {
                     <h2 className="text-lg font-semibold text-center">
                       {s.name}
                     </h2>
-                    <div className="mt-2 text-sm text-gray-500 text-center flex items-center justify-center gap-1">
+                    <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
                       <span className="text-lg">👥</span>
                       {formatSubscribers(s.subscribers)}
                     </div>
 
-                    <p className="text-xs text-gray-500 text-center mt-1">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
                       {s.description}
                     </p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mt-1">
+                    <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         width="16"
