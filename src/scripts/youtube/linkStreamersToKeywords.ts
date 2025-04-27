@@ -104,3 +104,7 @@ export async function linkStreamersToKeywords() {
   // 실행
   main();
 }
+
+if (require.main === module) {
+  linkStreamersToKeywords();
+}

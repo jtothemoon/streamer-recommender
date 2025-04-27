@@ -211,3 +211,7 @@ export async function searchAndSaveStreamers() {
   // 실행
   main();
 }
+
+if (require.main === module) {
+  searchAndSaveStreamers();
+}
