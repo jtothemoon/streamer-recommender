@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
+import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
 type Streamer = {
   id: string;
@@ -13,14 +14,36 @@ type Streamer = {
   profile_image_url: string;
   channel_url: string;
   created_at: string;
+  subscribers: number | null;
 };
 
 export default function Home() {
+  const [isVisible, setIsVisible] = useState(false);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
   // const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   // const [selectedGender, setSelectedGender] = useState<string | null>(null);
   const [results, setResults] = useState<Streamer[]>([]);
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const toggleVisibility = () => {
+      if (window.scrollY > 300) {
+        setIsVisible(true);
+      } else {
+        setIsVisible(false);
+      }
+    };
+
+    window.addEventListener("scroll", toggleVisibility);
+    return () => window.removeEventListener("scroll", toggleVisibility);
+  }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
 
   // 게임 타이틀 키워드만 사용
   const keywords = [
@@ -90,6 +113,13 @@ export default function Home() {
     else setResults(finalStreamers);
 
     setLoading(false);
+  };
+
+  const formatSubscribers = (count?: number | null) => {
+    if (!count) return "정보 없음";
+    if (count >= 10000) return `${(count / 10000).toFixed(1)}만명`;
+    if (count >= 1000) return `${(count / 1000).toFixed(1)}천명`;
+    return `${count}명`;
   };
 
   return (
@@ -182,72 +212,79 @@ export default function Home() {
       <section className="mt-10">
         {results.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {results.map((s) => {
-              const isNew = (() => {
-                if (!s.created_at) return false;
-                const createdDate = new Date(s.created_at);
-                const now = new Date();
-                const diff = now.getTime() - createdDate.getTime();
-                const sevenDays = 7 * 24 * 60 * 60 * 1000;
-                return diff < sevenDays;
-              })();
+            {results
+              .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
+              .map((s) => {
+                const isNew = (() => {
+                  if (!s.created_at) return false;
+                  const createdDate = new Date(s.created_at);
+                  const now = new Date();
+                  const diff = now.getTime() - createdDate.getTime();
+                  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+                  return diff < sevenDays;
+                })();
 
-              return (
-                <div
-                  key={s.id}
-                  className="border p-4 rounded-xl shadow hover:shadow-md hover:scale-[1.02] transition-transform relative bg-white"
-                >
-                  {isNew && (
-                    <span className="absolute top-2 right-2 bg-[#00C7AE] text-white text-[10px] px-1.5 py-0.5 rounded-full">
-                      N
-                    </span>
-                  )}
-
-                  <Image
-                    src={s.profile_image_url || "/placeholder.jpg"}
-                    alt={s.name}
-                    width={80}
-                    height={80}
-                    className="rounded-full mx-auto mb-3 object-cover border border-[#00C7AE]"
-                  />
-                  <h2 className="text-lg font-semibold text-center">
-                    {s.name}
-                  </h2>
-                  <p className="text-xs text-gray-500 text-center mt-1">
-                    {s.description}
-                  </p>
-                  <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mt-1">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="currentColor"
-                      className="text-red-500"
-                    >
-                      <path d="M23.498 6.186a2.99 2.99 0 0 0-2.107-2.116C19.412 3.5 12 3.5 12 3.5s-7.412 0-9.391.57A2.99 2.99 0 0 0 .502 6.186 29.838 29.838 0 0 0 0 12c0 2.007.127 3.959.502 5.814a2.99 2.99 0 0 0 2.107 2.116c1.979.57 9.391.57 9.391.57s7.412 0 9.391-.57a2.99 2.99 0 0 0 2.107-2.116c.375-1.855.502-3.807.502-5.814s-.127-3.959-.502-5.814zM9.75 15.02V8.98l6.5 3.02-6.5 3.02z" />
-                    </svg>
-                    <span>YOUTUBE</span>
-
-                    {s.gender !== "unknown" && (
-                      <>
-                        <span className="mx-1 text-gray-300">|</span> 🚻{" "}
-                        {s.gender}
-                      </>
-                    )}
-                  </div>
-
-                  <a
-                    href={s.channel_url}
-                    target="_blank"
-                    className="inline-block mt-3 text-[#00C7AE] hover:underline text-xs text-center"
-                    rel="noreferrer"
+                return (
+                  <div
+                    key={s.id}
+                    className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white"
                   >
-                    🔗 채널 보기
-                  </a>
-                </div>
-              );
-            })}
+                    {isNew && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
+                        N
+                      </div>
+                    )}
+
+                    <Image
+                      src={s.profile_image_url || "/placeholder.jpg"}
+                      alt={s.name}
+                      width={80}
+                      height={80}
+                      className="rounded-full mx-auto mb-3 object-cover border border-[#00C7AE]"
+                    />
+                    <h2 className="text-lg font-semibold text-center">
+                      {s.name}
+                    </h2>
+                    <div className="mt-2 text-sm text-gray-500 text-center flex items-center justify-center gap-1">
+                      <span className="text-lg">👥</span>
+                      {formatSubscribers(s.subscribers)}
+                    </div>
+
+                    <p className="text-xs text-gray-500 text-center mt-1">
+                      {s.description}
+                    </p>
+                    <div className="flex items-center justify-center gap-1 text-xs text-gray-400 mt-1">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="text-red-500"
+                      >
+                        <path d="M23.498 6.186a2.99 2.99 0 0 0-2.107-2.116C19.412 3.5 12 3.5 12 3.5s-7.412 0-9.391.57A2.99 2.99 0 0 0 .502 6.186 29.838 29.838 0 0 0 0 12c0 2.007.127 3.959.502 5.814a2.99 2.99 0 0 0 2.107 2.116c1.979.57 9.391.57 9.391.57s7.412 0 9.391-.57a2.99 2.99 0 0 0 2.107-2.116c.375-1.855.502-3.807.502-5.814s-.127-3.959-.502-5.814zM9.75 15.02V8.98l6.5 3.02-6.5 3.02z" />
+                      </svg>
+                      <span>YOUTUBE</span>
+
+                      {s.gender !== "unknown" && (
+                        <>
+                          <span className="mx-1 text-gray-300">|</span> 🚻{" "}
+                          {s.gender}
+                        </>
+                      )}
+                    </div>
+
+                    <a
+                      href={s.channel_url}
+                      target="_blank"
+                      className="inline-block mt-3 text-[#00C7AE] text-xs text-center font-bold hover:text-[#00b19c] transition-colors no-underline"
+                      rel="noreferrer"
+                    >
+                      🔗 채널 보기
+                    </a>
+                  </div>
+                );
+              })}
           </div>
         )}
 
@@ -257,6 +294,14 @@ export default function Home() {
           </p>
         )}
       </section>
+      {isVisible && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 w-12 h-12 bg-[#00C7AE] hover:bg-[#00b19c] text-white rounded-full shadow-lg flex items-center justify-center transition-colors"
+        >
+          <ChevronUpIcon className="w-6 h-6" />
+        </button>
+      )}
     </main>
   );
 }
