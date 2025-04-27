@@ -3,12 +3,13 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --font-sans: 'Pretendard', Arial, Helvetica, sans-serif;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --font-sans: var(--font-geist-sans); /* (여기 inline은 나중에 세팅 수정할 수도 있어) */
   --font-mono: var(--font-geist-mono);
 }
 
@@ -22,5 +23,5 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }

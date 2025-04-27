@@ -8,12 +8,20 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// gameType → 키워드 매핑
+// gameType → 키워드 매핑 확장
 const gameTypeToKeyword: { [key: string]: string } = {
   "종겜": "게임 방송",
   "롤": "LOL",
   "피파": "피파",
   "발로란트": "발로란트",
+  "배틀그라운드": "배틀그라운드",
+  "오버워치": "오버워치",
+  "스타크래프트": "스타크래프트",
+  "서든어택": "서든어택",
+  "GTA": "GTA",
+  "마인크래프트": "마인크래프트",
+  "모바일게임": "모바일게임",
+  "디아블로": "디아블로"
 };
 
 async function main() {

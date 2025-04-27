@@ -12,16 +12,31 @@ type Streamer = {
   gender: string;
   profile_image_url: string;
   channel_url: string;
+  created_at: string;
 };
 
 export default function Home() {
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
-  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  const [selectedGender, setSelectedGender] = useState<string | null>(null);
+  // const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  // const [selectedGender, setSelectedGender] = useState<string | null>(null);
   const [results, setResults] = useState<Streamer[]>([]);
   const [loading, setLoading] = useState(false);
 
-  const keywords = ["LOL", "피파", "발로란트", "게임 방송"];
+  // 게임 타이틀 키워드만 사용
+  const keywords = [
+    "LOL",
+    "피파",
+    "발로란트",
+    "배틀그라운드",
+    "오버워치",
+    "스타크래프트",
+    "서든어택",
+    "GTA",
+    "마인크래프트",
+    "모바일게임",
+    "디아블로",
+    "게임 방송", // 종합 게임 방송
+  ];
 
   const toggleKeyword = (keyword: string) => {
     setSelectedKeywords((prev) =>
@@ -59,12 +74,12 @@ export default function Home() {
     // 최종 조건: platform, gender, streamer_id
     let query = supabase.from("streamers").select("*");
 
-    if (selectedPlatform) {
-      query = query.eq("platform", selectedPlatform);
-    }
-    if (selectedGender) {
-      query = query.eq("gender", selectedGender);
-    }
+    // if (selectedPlatform) {
+    //   query = query.eq("platform", selectedPlatform);
+    // }
+    // if (selectedGender) {
+    //   query = query.eq("gender", selectedGender);
+    // }
     if (matchedStreamerIds.length > 0) {
       query = query.in("id", matchedStreamerIds);
     }
@@ -102,7 +117,7 @@ export default function Home() {
       </section>
 
       {/* 플랫폼 선택 */}
-      <section className="mb-6">
+      {/* <section className="mb-6">
         <h2 className="text-lg font-semibold mb-2">🎮 플랫폼</h2>
         <div className="flex gap-4">
           {["전체", "twitch", "youtube"].map((platform) => (
@@ -121,10 +136,10 @@ export default function Home() {
             </button>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* 성별 선택 */}
-      <section className="mb-6">
+      {/* <section className="mb-6">
         <h2 className="text-lg font-semibold mb-2">🚻 성별</h2>
         <div className="flex gap-4">
           {["전체", "male", "female"].map((gender) => (
@@ -143,15 +158,23 @@ export default function Home() {
             </button>
           ))}
         </div>
-      </section>
+      </section> */}
 
       {/* 추천 버튼 */}
       <div className="mt-8">
         <button
           onClick={fetchStreamers}
-          className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800"
+          className="bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center justify-center gap-2"
+          disabled={loading} // 로딩 중일 때 버튼 비활성화
         >
-          {loading ? "추천 중..." : "추천 받기 🔎"}
+          {loading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              추천 중...
+            </>
+          ) : (
+            "추천 받기 🔎"
+          )}
         </button>
       </div>
 
@@ -159,35 +182,55 @@ export default function Home() {
       <section className="mt-10">
         {results.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {results.map((s) => (
-              <div
-                key={s.id}
-                className="border p-4 rounded-xl shadow hover:shadow-lg transition"
-              >
-                <Image
-                  src={s.profile_image_url || "/placeholder.jpg"}
-                  alt={s.name}
-                  width={100}
-                  height={100}
-                  className="rounded-full mx-auto mb-4 object-cover"
-                />
-                <h2 className="text-xl font-semibold">{s.name}</h2>
-                <p className="text-sm text-gray-600 mb-2">{s.description}</p>
-                <div className="text-sm text-gray-500 mb-2">
-                  🎮 {s.platform.toUpperCase()}
-                  {s.gender !== "unknown" && <>&nbsp;|&nbsp; 🚻 {s.gender}</>}
-                </div>
+            {results.map((s) => {
+              const isNew = (() => {
+                if (!s.created_at) return false;
+                const createdDate = new Date(s.created_at);
+                const now = new Date();
+                const diff = now.getTime() - createdDate.getTime();
+                const sevenDays = 7 * 24 * 60 * 60 * 1000;
+                return diff < sevenDays;
+              })();
 
-                <a
-                  href={s.channel_url}
-                  target="_blank"
-                  className="inline-block mt-2 text-blue-600 hover:underline text-sm"
-                  rel="noreferrer"
+              return (
+                <div
+                  key={s.id}
+                  className="border p-4 rounded-xl shadow hover:shadow-md hover:scale-[1.02] transition-transform relative bg-white"
                 >
-                  🔗 채널 보기
-                </a>
-              </div>
-            ))}
+                  {isNew && (
+                    <span className="absolute top-2 right-2 bg-[#00C7AE] text-white text-[10px] px-1.5 py-0.5 rounded-full">
+                      N
+                    </span>
+                  )}
+
+                  <Image
+                    src={s.profile_image_url || "/placeholder.jpg"}
+                    alt={s.name}
+                    width={80}
+                    height={80}
+                    className="rounded-full mx-auto mb-3 object-cover border border-[#00C7AE]"
+                  />
+                  <h2 className="text-lg font-semibold text-center">
+                    {s.name}
+                  </h2>
+                  <p className="text-xs text-gray-500 text-center mt-1">
+                    {s.description}
+                  </p>
+                  <div className="text-xs text-gray-400 text-center mt-1">
+                    🎮 {s.platform.toUpperCase()}
+                    {s.gender !== "unknown" && <>&nbsp;|&nbsp; 🚻 {s.gender}</>}
+                  </div>
+                  <a
+                    href={s.channel_url}
+                    target="_blank"
+                    className="inline-block mt-3 text-[#00C7AE] hover:underline text-xs text-center"
+                    rel="noreferrer"
+                  >
+                    🔗 채널 보기
+                  </a>
+                </div>
+              );
+            })}
           </div>
         )}
 
