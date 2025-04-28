@@ -1,7 +1,7 @@
 import StreamerDetail from "./StreamerDetail";
 
 interface PageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function Page({ params }: PageProps) {
