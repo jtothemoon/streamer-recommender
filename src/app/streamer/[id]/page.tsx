@@ -1,5 +1,9 @@
 import StreamerDetail from "./StreamerDetail";
 
-export default function Page({ params }: { params: { id: string } }) {
+interface PageProps {
+  params: { id: string };
+}
+
+export default async function Page({ params }: PageProps) {
   return <StreamerDetail id={params.id} />;
 }
