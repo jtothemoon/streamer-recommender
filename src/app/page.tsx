@@ -8,17 +8,7 @@ import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
 import Link from "next/link";
 
-type Streamer = {
-  id: string;
-  name: string;
-  description: string;
-  platform: string;
-  gender: string;
-  profile_image_url: string;
-  channel_url: string;
-  created_at: string;
-  subscribers: number | null;
-};
+import { Streamer } from "@/types/streamer";
 
 export default function Home() {
   const [isVisible, setIsVisible] = useState(false);
@@ -228,7 +218,6 @@ export default function Home() {
                   <Link href={`/streamer/${s.id}`} className="block" key={s.id}>
                     <div
                       key={s.id}
-                      onClick={() => router.push(`/streamer/${s.id}`)}
                       className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white dark:bg-[#1a1a1a] cursor-pointer"
                     >
                       {isNew && (
