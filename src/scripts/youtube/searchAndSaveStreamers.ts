@@ -135,6 +135,43 @@ export async function searchAndSaveStreamers() {
     }
   };
 
+  const getLatestUploadDate = async (
+    channelId: string
+  ): Promise<Date | null> => {
+    try {
+      const { data: channelData } = await axios.get(
+        "https://www.googleapis.com/youtube/v3/channels",
+        {
+          params: {
+            part: "contentDetails",
+            id: channelId,
+            key: apiKey,
+          },
+        }
+      );
+      const uploadsPlaylistId =
+        channelData.items?.[0]?.contentDetails?.relatedPlaylists?.uploads;
+      if (!uploadsPlaylistId) return null;
+
+      const { data: playlistData } = await axios.get(
+        "https://www.googleapis.com/youtube/v3/playlistItems",
+        {
+          params: {
+            part: "snippet",
+            playlistId: uploadsPlaylistId,
+            maxResults: 1,
+            key: apiKey,
+          },
+        }
+      );
+      const publishedAt = playlistData.items?.[0]?.snippet?.publishedAt;
+      return publishedAt ? new Date(publishedAt) : null;
+    } catch (err) {
+      console.error(`❌ 최신 업로드 날짜 가져오기 실패: ${channelId}`, err);
+      return null;
+    }
+  };
+
   // 메인 실행 함수
   const main = async () => {
     for (const [gameType, keywords] of Object.entries(gameKeywords)) {
@@ -189,6 +226,20 @@ export async function searchAndSaveStreamers() {
             console.log(
               `🚫 구독자 수 미달: ${snippet.title} (${subscribers}명)`
             );
+            continue;
+          }
+
+          // 최근 업로드 날짜 가져오기
+          const latestUploadDate = await getLatestUploadDate(channelId);
+          if (!latestUploadDate) {
+            console.log(`🚫 최근 업로드 정보 없음: ${snippet.title}`);
+            continue;
+          }
+
+          const daysSinceUpload =
+            (Date.now() - latestUploadDate.getTime()) / (1000 * 60 * 60 * 24);
+          if (daysSinceUpload > 30) {
+            console.log(`🚫 최근 1개월 업로드 없음: ${snippet.title}`);
             continue;
           }
 

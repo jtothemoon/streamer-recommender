@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import { ChevronUpIcon } from "@heroicons/react/24/solid";
+
+import Link from "next/link";
 
 type Streamer = {
   id: string;
@@ -24,6 +27,8 @@ export default function Home() {
   // const [selectedGender, setSelectedGender] = useState<string | null>(null);
   const [results, setResults] = useState<Streamer[]>([]);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -69,24 +74,22 @@ export default function Home() {
     );
   };
 
-  const fetchStreamers = async () => {
+  const fetchStreamers = () => {
+    if (selectedKeywords.length === 0) return;
+    const query = selectedKeywords.join(",");
+    router.push(`/?keywords=${query}`);
+  };
+
+  const doFetchStreamers = async (keywords: string[]) => {
     setLoading(true);
 
-    // 키워드 ID 목록 가져오기
-    const { data: keywordMatches, error: keywordError } = await supabase
+    const { data: keywordMatches } = await supabase
       .from("keywords")
       .select("id")
-      .in("name", selectedKeywords);
+      .in("name", keywords);
 
-    if (keywordError) {
-      console.error("❌ 키워드 불러오기 실패:", keywordError);
-      setLoading(false);
-      return;
-    }
+    const keywordIds = (keywordMatches ?? []).map((k) => k.id);
 
-    const keywordIds = keywordMatches.map((k) => k.id);
-
-    // 키워드 포함된 스트리머 ID들 가져오기
     const { data: mappings } = await supabase
       .from("streamer_keywords")
       .select("streamer_id")
@@ -94,26 +97,23 @@ export default function Home() {
 
     const matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
 
-    // 최종 조건: platform, gender, streamer_id
     let query = supabase.from("streamers").select("*");
-
-    // if (selectedPlatform) {
-    //   query = query.eq("platform", selectedPlatform);
-    // }
-    // if (selectedGender) {
-    //   query = query.eq("gender", selectedGender);
-    // }
     if (matchedStreamerIds.length > 0) {
       query = query.in("id", matchedStreamerIds);
     }
 
-    const { data: finalStreamers, error } = await query;
-
-    if (error) console.error("❌ 스트리머 불러오기 실패:", error);
-    else setResults(finalStreamers);
-
+    const { data: finalStreamers } = await query;
+    setResults(finalStreamers || []);
     setLoading(false);
   };
+
+  useEffect(() => {
+    const keywordsFromURL = searchParams.get("keywords")?.split(",") || [];
+    if (keywordsFromURL.length > 0) {
+      setSelectedKeywords(keywordsFromURL);
+      doFetchStreamers(keywordsFromURL);
+    }
+  }, [searchParams]);
 
   const formatSubscribers = (count?: number | null) => {
     if (!count) return "정보 없음";
@@ -225,64 +225,69 @@ export default function Home() {
                 })();
 
                 return (
-                  <div
-                    key={s.id}
-                    className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white dark:bg-[#1a1a1a]"
-                  >
-                    {isNew && (
-                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
-                        N
-                      </div>
-                    )}
-
-                    <Image
-                      src={s.profile_image_url || "/placeholder.jpg"}
-                      alt={s.name}
-                      width={80}
-                      height={80}
-                      className="rounded-full mx-auto mb-3 object-cover border border-[#00C7AE]"
-                    />
-                    <h2 className="text-lg font-semibold text-center">
-                      {s.name}
-                    </h2>
-                    <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
-                      <span className="text-lg">👥</span>
-                      {formatSubscribers(s.subscribers)}
-                    </div>
-
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-1">
-                      {s.description}
-                    </p>
-                    <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="text-red-500"
-                      >
-                        <path d="M23.498 6.186a2.99 2.99 0 0 0-2.107-2.116C19.412 3.5 12 3.5 12 3.5s-7.412 0-9.391.57A2.99 2.99 0 0 0 .502 6.186 29.838 29.838 0 0 0 0 12c0 2.007.127 3.959.502 5.814a2.99 2.99 0 0 0 2.107 2.116c1.979.57 9.391.57 9.391.57s7.412 0 9.391-.57a2.99 2.99 0 0 0 2.107-2.116c.375-1.855.502-3.807.502-5.814s-.127-3.959-.502-5.814zM9.75 15.02V8.98l6.5 3.02-6.5 3.02z" />
-                      </svg>
-                      <span>YOUTUBE</span>
-
-                      {s.gender !== "unknown" && (
-                        <>
-                          <span className="mx-1 text-gray-300">|</span> 🚻{" "}
-                          {s.gender}
-                        </>
-                      )}
-                    </div>
-
-                    <a
-                      href={s.channel_url}
-                      target="_blank"
-                      className="inline-block mt-3 text-[#00C7AE] text-xs text-center font-bold hover:text-[#00b19c] transition-colors no-underline"
-                      rel="noreferrer"
+                  <Link href={`/streamer/${s.id}`} className="block" key={s.id}>
+                    <div
+                      key={s.id}
+                      onClick={() => router.push(`/streamer/${s.id}`)}
+                      className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white dark:bg-[#1a1a1a] cursor-pointer"
                     >
-                      🔗 채널 보기
-                    </a>
-                  </div>
+                      {isNew && (
+                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
+                          N
+                        </div>
+                      )}
+
+                      <Image
+                        src={s.profile_image_url || "/placeholder.jpg"}
+                        alt={s.name}
+                        width={80}
+                        height={80}
+                        className="rounded-full mx-auto mb-3 object-cover border border-[#00C7AE]"
+                      />
+                      <h2 className="text-lg font-semibold text-center truncate">
+                        {s.name}
+                      </h2>
+                      <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
+                        <span className="text-lg">👥</span>
+                        {formatSubscribers(s.subscribers)}
+                      </div>
+
+                      <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1 truncate">
+                        {s.description || "채널 설명 없음"}
+                      </p>
+
+                      <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="currentColor"
+                          className="text-red-500"
+                        >
+                          <path d="M23.498 6.186a2.99 2.99 0 0 0-2.107-2.116C19.412 3.5 12 3.5 12 3.5s-7.412 0-9.391.57A2.99 2.99 0 0 0 .502 6.186 29.838 29.838 0 0 0 0 12c0 2.007.127 3.959.502 5.814a2.99 2.99 0 0 0 2.107 2.116c1.979.57 9.391.57 9.391.57s7.412 0 9.391-.57a2.99 2.99 0 0 0 2.107-2.116c.375-1.855.502-3.807.502-5.814s-.127-3.959-.502-5.814zM9.75 15.02V8.98l6.5 3.02-6.5 3.02z" />
+                        </svg>
+                        <span>YOUTUBE</span>
+
+                        {s.gender !== "unknown" && (
+                          <>
+                            <span className="mx-1 text-gray-300">|</span> 🚻{" "}
+                            {s.gender}
+                          </>
+                        )}
+                      </div>
+
+                      <a
+                        href={s.channel_url}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={(e) => e.stopPropagation()} // ✅ 추가
+                        className="inline-block mt-3 text-[#00C7AE] text-xs font-bold hover:text-[#00b19c] transition-colors"
+                      >
+                        🔗 채널 방문
+                      </a>
+                    </div>
+                  </Link>
                 );
               })}
           </div>
