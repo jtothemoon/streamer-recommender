@@ -5,5 +5,7 @@ interface PageProps {
 }
 
 export default async function Page({ params }: PageProps) {
-  return <StreamerDetail id={params.id} />;
+  const { id } = await params;
+
+  return <StreamerDetail id={id} />;
 }

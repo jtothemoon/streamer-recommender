@@ -6,8 +6,6 @@ import { supabase } from "@/lib/supabaseClient";
 import Image from "next/image";
 import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
-import Link from "next/link";
-
 import { Streamer } from "@/types/streamer";
 
 export default function Home() {
@@ -215,68 +213,67 @@ export default function Home() {
                 })();
 
                 return (
-                  <Link href={`/streamer/${s.id}`} className="block" key={s.id}>
-                    <div
-                      key={s.id}
-                      className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white dark:bg-[#1a1a1a] cursor-pointer"
-                    >
-                      {isNew && (
-                        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
-                          N
-                        </div>
-                      )}
-
-                      <Image
-                        src={s.profile_image_url || "/placeholder.jpg"}
-                        alt={s.name}
-                        width={80}
-                        height={80}
-                        className="rounded-full mx-auto mb-3 object-cover border border-[#00C7AE]"
-                      />
-                      <h2 className="text-lg font-semibold text-center truncate">
-                        {s.name}
-                      </h2>
-                      <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
-                        <span className="text-lg">👥</span>
-                        {formatSubscribers(s.subscribers)}
+                  <div
+                    key={s.id}
+                    onClick={() => router.push(`/streamer/${s.id}`)}
+                    className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white dark:bg-[#1a1a1a] cursor-pointer"
+                  >
+                    {isNew && (
+                      <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
+                        N
                       </div>
+                    )}
 
-                      <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1 truncate">
-                        {s.description || "채널 설명 없음"}
-                      </p>
-
-                      <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          width="16"
-                          height="16"
-                          viewBox="0 0 24 24"
-                          fill="currentColor"
-                          className="text-red-500"
-                        >
-                          <path d="M23.498 6.186a2.99 2.99 0 0 0-2.107-2.116C19.412 3.5 12 3.5 12 3.5s-7.412 0-9.391.57A2.99 2.99 0 0 0 .502 6.186 29.838 29.838 0 0 0 0 12c0 2.007.127 3.959.502 5.814a2.99 2.99 0 0 0 2.107 2.116c1.979.57 9.391.57 9.391.57s7.412 0 9.391-.57a2.99 2.99 0 0 0 2.107-2.116c.375-1.855.502-3.807.502-5.814s-.127-3.959-.502-5.814zM9.75 15.02V8.98l6.5 3.02-6.5 3.02z" />
-                        </svg>
-                        <span>YOUTUBE</span>
-
-                        {s.gender !== "unknown" && (
-                          <>
-                            <span className="mx-1 text-gray-300">|</span> 🚻{" "}
-                            {s.gender}
-                          </>
-                        )}
-                      </div>
-
-                      <a
-                        href={s.channel_url}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()} // ✅ 추가
-                        className="inline-block mt-3 text-[#00C7AE] text-xs font-bold hover:text-[#00b19c] transition-colors"
-                      >
-                        🔗 채널 방문
-                      </a>
+                    <Image
+                      src={s.profile_image_url || "/placeholder.jpg"}
+                      alt={s.name}
+                      width={80}
+                      height={80}
+                      className="rounded-full mx-auto mb-3 object-cover border border-[#00C7AE]"
+                    />
+                    <h2 className="text-lg font-semibold text-center truncate">
+                      {s.name}
+                    </h2>
+                    <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
+                      <span className="text-lg">👥</span>
+                      {formatSubscribers(s.subscribers)}
                     </div>
-                  </Link>
+
+                    <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1 truncate">
+                      {s.description || "채널 설명 없음"}
+                    </p>
+
+                    <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="text-red-500"
+                      >
+                        <path d="M23.498 6.186a2.99 2.99 0 0 0-2.107-2.116C19.412 3.5 12 3.5 12 3.5s-7.412 0-9.391.57A2.99 2.99 0 0 0 .502 6.186 29.838 29.838 0 0 0 0 12c0 2.007.127 3.959.502 5.814a2.99 2.99 0 0 0 2.107 2.116c1.979.57 9.391.57 9.391.57s7.412 0 9.391-.57a2.99 2.99 0 0 0 2.107-2.116c.375-1.855.502-3.807.502-5.814s-.127-3.959-.502-5.814zM9.75 15.02V8.98l6.5 3.02-6.5 3.02z" />
+                      </svg>
+                      <span>YOUTUBE</span>
+
+                      {s.gender !== "unknown" && (
+                        <>
+                          <span className="mx-1 text-gray-300">|</span> 🚻{" "}
+                          {s.gender}
+                        </>
+                      )}
+                    </div>
+
+                    <a
+                      href={s.channel_url}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(e) => e.stopPropagation()} // ✅ 추가
+                      className="inline-block mt-3 text-[#00C7AE] text-xs font-bold hover:text-[#00b19c] transition-colors"
+                    >
+                      🔗 채널 방문
+                    </a>
+                  </div>
                 );
               })}
           </div>
