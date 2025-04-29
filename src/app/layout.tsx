@@ -47,6 +47,7 @@ export default function RootLayout({
         />
         <link rel="icon" href="/favicon.ico" sizes="any" />
         <meta name="naver-site-verification" content="df38bd2f56d79d920740289ef8e966c6270711cf" />
+        <meta name="msvalidate.01" content="AE558A915942DBD8D864DB77ACCD8C09" />
       </head>
       <body className="flex flex-col min-h-screen font-sans text-[#111111] dark:text-gray-200 bg-white dark:bg-[#111111]">
         <Header />
