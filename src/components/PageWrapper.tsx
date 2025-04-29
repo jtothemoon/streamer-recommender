@@ -1,13 +1,10 @@
 "use client";
 
-import { usePathname } from "next/navigation";
-
 export default function PageWrapper({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const isLandingPage = pathname === "/";
-
+  
   return (
-    <div className={isLandingPage ? "pt-0" : "pt-16"}>
+    // 베타 배너(32px) + 헤더(72px)의 총 높이만큼 패딩 적용
+    <div className="pt-[104px]">
       {children}
     </div>
   );
