@@ -93,6 +93,7 @@ export async function searchAndSaveStreamers() {
     subscribers: number;
     channelUrl: string;
     gameType: string;
+    latestUploadDate: Date;
   }) => {
     const { error } = await supabase.from("streamers").upsert({
       id: data.id,
@@ -104,6 +105,7 @@ export async function searchAndSaveStreamers() {
       channel_url: data.channelUrl,
       subscribers: data.subscribers,
       game_type: data.gameType,
+      latest_uploaded_at: data.latestUploadDate.toISOString(),
     });
 
     if (error) {
@@ -251,6 +253,7 @@ export async function searchAndSaveStreamers() {
             subscribers: subscribers,
             channelUrl: `https://www.youtube.com/channel/${channelId}`,
             gameType: gameType,
+            latestUploadDate: latestUploadDate,
           });
         }
       }

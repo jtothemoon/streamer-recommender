@@ -18,7 +18,7 @@ type Streamer = {
   channel_url: string;
   created_at: string;
   subscribers: number | null;
-  latest_upload_at: string | null;
+  latest_uploaded_at: string | null;
 };
 
 export default function StreamerDetail({ id }: { id: string }) {
@@ -104,10 +104,10 @@ export default function StreamerDetail({ id }: { id: string }) {
         </div>
 
         {/* 최근 업로드 */}
-        {streamer.latest_upload_at && (
+        {streamer.latest_uploaded_at && (
           <p className="text-gray-400 mt-2 text-sm">
             ⏰ 최근 업로드:{" "}
-            {new Date(streamer.latest_upload_at).toLocaleDateString()}
+            {new Date(streamer.latest_uploaded_at).toLocaleDateString()}
           </p>
         )}
 
