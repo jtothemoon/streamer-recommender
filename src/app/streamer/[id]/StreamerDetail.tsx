@@ -4,7 +4,9 @@ import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import Image from "next/image";
+
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
+import YoutubeIcon from "@/components/icons/YoutubeIcon";
 
 type Streamer = {
   id: string;
@@ -88,16 +90,7 @@ export default function StreamerDetail({ id }: { id: string }) {
         {/* 기본 정보 */}
         <div className="flex justify-center gap-2 mt-6 text-sm text-gray-400 items-center">
           {/* 유튜브 아이콘 */}
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="20"
-            height="20"
-            viewBox="0 0 576 512"
-            fill="currentColor"
-            className="text-red-500"
-          >
-            <path d="M549.7 124.1c-6.3-23.7-24.9-42.2-48.6-48.5C456.5 64 288 64 288 64S119.5 64 74.9 75.6c-23.7 6.3-42.3 24.9-48.6 48.5C16 168.5 16 256 16 256s0 87.5 10.3 131.9c6.3 23.7 24.9 42.2 48.6 48.5C119.5 448 288 448 288 448s168.5 0 213.1-11.6c23.7-6.3 42.3-24.9 48.6-48.5C560 343.5 560 256 560 256s0-87.5-10.3-131.9zM232 336V176l142 80-142 80z" />
-          </svg>
+          <YoutubeIcon />
           <span>{streamer.platform.toUpperCase()}</span>
 
           {streamer.gender !== "unknown" && <span>🚻 {streamer.gender}</span>}
