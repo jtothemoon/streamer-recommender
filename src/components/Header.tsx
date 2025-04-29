@@ -13,7 +13,7 @@ export default function Header() {
   };
 
   return (
-    <header className="w-full p-4 border-b flex justify-between items-center">
+    <header className="w-full p-4 flex justify-between items-center fixed top-0 bg-white dark:bg-[#111111] z-50 shadow-sm">
       <Link
         href="/"
         onClick={handleLogoClick}
