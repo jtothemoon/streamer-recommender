@@ -1,8 +1,6 @@
-import PageWrapper from "@/components/PageWrapper"; // 추가
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import "./globals.css";
 import { Metadata } from "next";
+import ClientLayout from "@/components/ClientLayout";
 
 export const metadata: Metadata = {
   title: "Spick - 게임 스트리머 추천 서비스",
@@ -16,7 +14,7 @@ export const metadata: Metadata = {
     siteName: "Spick",
     images: [
       {
-        url: "https://spick.app/og-image.png", // 오픈그래프 대표 이미지 (추후 준비)
+        url: "https://spick.app/og-image.png",
         width: 1200,
         height: 630,
         alt: "Spick 대표 이미지",
@@ -50,11 +48,7 @@ export default function RootLayout({
         <meta name="msvalidate.01" content="AE558A915942DBD8D864DB77ACCD8C09" />
       </head>
       <body className="flex flex-col min-h-screen font-sans text-[#111111] dark:text-gray-200 bg-white dark:bg-[#111111]">
-        <Header />
-        <PageWrapper>
-          <main className="flex-1">{children}</main>
-        </PageWrapper>
-        <Footer />
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
