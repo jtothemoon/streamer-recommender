@@ -120,8 +120,12 @@ export default function HomeClient() {
       <div className="mt-8">
         <button
           onClick={fetchStreamers}
-          className="bg-black text-white dark:bg-gray-200 dark:text-black px-6 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 cursor-pointer min-w-[120px]"
-          disabled={loading}
+          className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 min-w-[120px] ${
+            selectedKeywords.length === 0
+              ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
+              : "bg-black text-white dark:bg-gray-200 dark:text-black hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors cursor-pointer"
+          }`}
+          disabled={loading || selectedKeywords.length === 0}
         >
           {loading ? (
             <LoadingSpinner text="추천 중..." size="small" />

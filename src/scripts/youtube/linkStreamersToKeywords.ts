@@ -1,6 +1,22 @@
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
 
+/**
+* 스트리머-키워드 매핑 스크립트
+* 
+* 용도: 스트리머의 게임 타입에 따라 적절한 키워드를 연결
+* 작동: 모든 스트리머 조회 → game_type 확인 → 키워드 매핑 → DB 연결
+* 
+* 실행 방법: 
+* npx ts-node --project tsconfig.scripts.json src/scripts/youtube/linkStreamersToKeywords.ts
+* 
+* 처리 과정:
+* 1. streamers 테이블에서 모든 스트리머 정보 조회
+* 2. 각 스트리머의 game_type에 맞는 키워드 확인
+* 3. 필요한 경우 키워드 자동 생성
+* 4. streamer_keywords 테이블에 관계 저장 (upsert)
+*/
+
 export async function linkStreamersToKeywords() {
   // 환경변수 설정
   dotenv.config();
