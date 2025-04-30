@@ -9,8 +9,10 @@ import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
 import { fetchKeywords } from "@/utils/fetchKeywords";
 
-import { KeywordSelector } from "@/components/KeywordSelector";
-import { StreamerCard } from "@/components/StreamerCard";
+import { KeywordSelector } from "@/components/streamer/KeywordSelector";
+import { StreamerCard } from "@/components/streamer/StreamerCard";
+
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function HomeClient() {
   const [isVisible, setIsVisible] = useState(false);
@@ -118,14 +120,11 @@ export default function HomeClient() {
       <div className="mt-8">
         <button
           onClick={fetchStreamers}
-          className="bg-black text-white dark:bg-gray-200 dark:text-black px-6 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 cursor-pointer"
+          className="bg-black text-white dark:bg-gray-200 dark:text-black px-6 py-2 rounded-lg hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 cursor-pointer min-w-[120px]"
           disabled={loading}
         >
           {loading ? (
-            <>
-              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-              추천 중...
-            </>
+            <LoadingSpinner text="추천 중..." size="small" />
           ) : (
             "추천 받기 🔎"
           )}

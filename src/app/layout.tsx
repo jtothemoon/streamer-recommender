@@ -1,6 +1,6 @@
 import "./globals.css";
 import { Metadata } from "next";
-import ClientLayout from "@/components/ClientLayout";
+import ClientLayout from "@/components/layout/ClientLayout";
 
 export const metadata: Metadata = {
   title: "Spick - 게임 스트리머 추천 서비스",

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
 import { useRouter } from "next/navigation";
-import Link from 'next/link';
+import Link from "next/link";
 
 export default function Header() {
   const router = useRouter();
@@ -22,6 +22,12 @@ export default function Header() {
         Spick
       </Link>
       <nav className="flex gap-4 text-sm">
+        <Link
+          href="/favorites"
+          className="hover:text-[#00C7AE] transition-colors"
+        >
+          Favorites
+        </Link>
         <Link href="/about" className="hover:text-[#00C7AE] transition-colors">
           About
         </Link>

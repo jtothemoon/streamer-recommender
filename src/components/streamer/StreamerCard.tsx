@@ -4,7 +4,8 @@ import { Streamer } from "@/types/streamer";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
-import YoutubeIcon from "./icons/YoutubeIcon";
+import YoutubeIcon from "../icons/YoutubeIcon";
+import FavoriteButton from "../ui/FavoriteButton";
 
 export function StreamerCard({ streamer }: { streamer: Streamer }) {
   const router = useRouter();
@@ -35,6 +36,11 @@ export function StreamerCard({ streamer }: { streamer: Streamer }) {
           N
         </div>
       )}
+
+      <div className="absolute top-2 right-2">
+        <FavoriteButton streamer={streamer} />
+      </div>
+
       <Image
         src={streamer.profile_image_url || "/placeholder.jpg"}
         alt={streamer.name}

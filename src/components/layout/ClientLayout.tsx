@@ -1,9 +1,9 @@
 'use client';
 
-import PageWrapper from "@/components/PageWrapper";
-import BetaBanner from "@/components/BetaBanner";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
+import PageWrapper from "@/components/layout/PageWrapper";
+import BetaBanner from "@/components/layout/BetaBanner";
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
