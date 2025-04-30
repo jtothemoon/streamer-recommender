@@ -1,22 +1,16 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useBannerStore } from '@/store/bannerStore';
 import { XMarkIcon } from '@heroicons/react/24/outline';
 
 export default function BetaBanner() {
   const { isBannerVisible, setBannerVisible } = useBannerStore();
 
-  useEffect(() => {
-    const closed = localStorage.getItem('betaBannerClosed') === 'true';
-    setBannerVisible(!closed);
-  }, [setBannerVisible]);
-
   if (!isBannerVisible) return null;
 
   const closeBanner = () => {
-    localStorage.setItem('betaBannerClosed', 'true');
     setBannerVisible(false);
+    // localStorage 직접 조작 필요 없음
   };
 
   return (
