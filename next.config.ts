@@ -3,7 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   /* config options here */
   images: {
-    domains: ['example.com' ,'yt3.ggpht.com'],
+    domains: ['static-cdn.jtvnw.net' ,'yt3.ggpht.com'],
   }
 };
 

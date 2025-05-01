@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import YoutubeIcon from "../icons/YoutubeIcon";
+import TwitchIcon from "../icons/TwitchIcon";
 import FavoriteButton from "../ui/FavoriteButton";
 
 export function StreamerCard({ streamer }: { streamer: Streamer }) {
@@ -53,14 +54,26 @@ export function StreamerCard({ streamer }: { streamer: Streamer }) {
       </h2>
       <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
         <span className="text-lg">👥</span>
-        {formatSubscribers(streamer.subscribers)}
+        {streamer.platform === "youtube"
+          ? `${formatSubscribers(streamer.subscribers)} 구독자`
+          : '구독자 수 제공 안됨'}
       </div>
       <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1 truncate">
         {streamer.description || "채널 설명 없음"}
       </p>
       <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
-        <YoutubeIcon />
-        <span>YOUTUBE</span>
+        {streamer.platform === "youtube" && (
+          <>
+            <YoutubeIcon />
+            <span>YOUTUBE</span>
+          </>
+        )}
+        {streamer.platform === "twitch" && (
+          <>
+            <TwitchIcon />
+            <span>TWITCH</span>
+          </>
+        )}
         {streamer.gender !== "unknown" && (
           <>
             <span className="mx-1 text-gray-300">|</span> 🚻 {streamer.gender}
