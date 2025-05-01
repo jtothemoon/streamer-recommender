@@ -55,19 +55,22 @@ export default function HomeClient() {
 
   const fetchStreamers = () => {
     if (!selectedPlatform) return;
-    const query = selectedKeywords.length > 0 ? selectedKeywords.join(",") : "all";
-    const platformQuery = `&platform=${selectedPlatform}`;
-    router.push(`/?keywords=${query}${platformQuery}`);
-  };
+    const query = selectedKeywords.length > 0 ? selectedKeywords.join(",") : null;
+    const platformQuery = `platform=${selectedPlatform}`;
+    
+    const url = query
+      ? `/?keywords=${query}&${platformQuery}`
+      : `/?${platformQuery}`;
   
+    router.push(url);
+  };
 
   const doFetchStreamers = async (keywords: string[], platform?: string | null) => {
     setLoading(true);
   
     let matchedStreamerIds: string[] = [];
   
-    // 🔥 키워드 없으면 전체 streamers id 가져오기
-    if (keywords.length === 0 || keywords.includes("all")) {
+    if (keywords.length === 0) {
       const { data: allStreamers } = await supabase
         .from("streamers")
         .select("id");
@@ -113,7 +116,6 @@ export default function HomeClient() {
     setResults(filteredResults);
     setLoading(false);
   };
-  
 
   useEffect(() => {
     const loadKeywords = async () => {
@@ -124,21 +126,23 @@ export default function HomeClient() {
   }, []);
 
   useEffect(() => {
-    const keywordsFromURL = searchParams.get("keywords")?.split(",") || [];
+    const keywordsParam = searchParams.get("keywords");
+    const keywordsFromURL = keywordsParam
+      ? keywordsParam.split(",").filter((k) => k.length > 0)
+      : [];
+    
     const platformFromURL = searchParams.get("platform") || null;
   
     if (!platformFromURL) {
-      // ✅ 플랫폼 없으면 추천 실행 안 함
       return;
     }
   
-    const effectiveKeywords = keywordsFromURL.length > 0 ? keywordsFromURL : ["all"];
-  
-    setSelectedKeywords(effectiveKeywords);
+    setSelectedKeywords(keywordsFromURL);
     setSelectedPlatform(platformFromURL);
   
-    doFetchStreamers(effectiveKeywords, platformFromURL);
+    doFetchStreamers(keywordsFromURL, platformFromURL);
   }, [searchParams]);
+  
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
