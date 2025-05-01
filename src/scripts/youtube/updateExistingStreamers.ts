@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
-import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
+import { getChannelDetails } from "./utils/channels";
 
 /**
  * 기존 스트리머 정보 업데이트 스크립트
@@ -21,8 +21,6 @@ export async function updateExistingStreamers() {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const apiKey = process.env.YOUTUBE_API_KEY!;
-
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // 커맨드라인 인자 파싱
@@ -38,110 +36,6 @@ export async function updateExistingStreamers() {
     }
   }
 
-  // 타입 정의
-  type ChannelDetailsResult =
-    | {
-        success: true;
-        data: {
-          subscribers: number;
-          latestUploadDate: Date | null;
-          profileImage: string;
-          description: string;
-        };
-      }
-    | { success: false; message: string };
-
-  // 채널 세부 정보 가져오기
-  const getChannelDetails = async (
-    channelId: string
-  ): Promise<ChannelDetailsResult> => {
-    try {
-      // 채널 정보 가져오기 (구독자 수, 설명, 업로드 플레이리스트 등)
-      const { data: channelData } = await axios.get(
-        "https://www.googleapis.com/youtube/v3/channels",
-        {
-          params: {
-            part: "contentDetails,statistics,snippet",
-            id: channelId,
-            key: apiKey,
-          },
-        }
-      );
-
-      if (!channelData.items?.length) {
-        return { success: false, message: "채널 정보 없음" };
-      }
-
-      const channelItem = channelData.items[0];
-
-      // 구독자 수 확인
-      const statistics = channelItem.statistics || {};
-      const subscriberCount = statistics.subscriberCount;
-      const hiddenSubscriberCount = statistics.hiddenSubscriberCount;
-
-      // 구독자 수 비공개 채널 스킵
-      if (hiddenSubscriberCount) {
-        return { success: false, message: "구독자 수 비공개" };
-      }
-
-      // 구독자 수 값
-      const subscribers = parseInt(subscriberCount || "0", 10);
-
-      // 프로필 이미지와 설명 가져오기
-      const snippet = channelItem.snippet || {};
-      const profileImage = snippet.thumbnails?.default?.url || "";
-      const description = snippet.description || "";
-
-      // 업로드 플레이리스트 ID
-      const uploadsPlaylistId =
-        channelItem?.contentDetails?.relatedPlaylists?.uploads;
-      if (!uploadsPlaylistId) {
-        return { success: false, message: "업로드 플레이리스트 정보 없음" };
-      }
-
-      // 최신 동영상 정보 가져오기
-      let latestUploadDate: Date | null = null;
-
-      try {
-        const { data: playlistData } = await axios.get(
-          "https://www.googleapis.com/youtube/v3/playlistItems",
-          {
-            params: {
-              part: "snippet",
-              playlistId: uploadsPlaylistId,
-              maxResults: 1,
-              key: apiKey,
-            },
-          }
-        );
-
-        if (playlistData.items?.length) {
-          const publishedAt = playlistData.items[0].snippet?.publishedAt;
-          if (publishedAt) {
-            latestUploadDate = new Date(publishedAt);
-          }
-        }
-      } catch (err) {
-        console.error(`⚠️ 최신 동영상 정보 가져오기 실패: ${channelId}`, err);
-        // 최신 동영상 정보가 없어도 업데이트는 계속 진행
-      }
-
-      // 성공시 필요 정보 반환
-      return {
-        success: true,
-        data: {
-          subscribers,
-          latestUploadDate,
-          profileImage,
-          description,
-        },
-      };
-    } catch (err) {
-      console.error(`❌ 채널 세부 정보 가져오기 실패: ${channelId}`, err);
-      return { success: false, message: "API 호출 오류" };
-    }
-  };
-
   // Supabase 업데이트
   const updateStreamer = async (data: {
     id: string;
@@ -155,6 +49,7 @@ export async function updateExistingStreamers() {
   }) => {
     const now = new Date().toISOString();
 
+    // 1. 메인 streamers 테이블 업데이트
     const { error } = await supabase
       .from("streamers")
       .update({
@@ -171,12 +66,33 @@ export async function updateExistingStreamers() {
     if (error) {
       console.error(`❌ 스트리머 업데이트 실패 (${data.name}):`, error);
       return false;
-    } else {
-      console.log(
-        `✅ 업데이트 완료: ${data.name} (구독자: ${data.subscribers}명)`
-      );
+    }
+
+    // 2. streamer_platforms 테이블 업데이트 (upsert)
+    const { error: platformError } = await supabase
+      .from("streamer_platforms")
+      .upsert({
+        streamer_id: data.id,
+        platform: "youtube",
+        platform_id: data.id, // YouTube는 채널 ID가 streamer ID와 동일
+        channel_url: data.channelUrl,
+        profile_image_url: data.profileImage,
+        subscribers: data.subscribers,
+        latest_uploaded_at: data.latestUploadDate
+          ? data.latestUploadDate.toISOString()
+          : null,
+        updated_at: now,
+      });
+
+    if (platformError) {
+      console.error(`❌ 플랫폼 정보 업데이트 실패 (${data.name}):`, platformError);
+      // 메인 스트리머는 업데이트됐으므로 true 반환
+      console.log(`⚠️ 플랫폼 업데이트 실패했으나 스트리머는 업데이트됨: ${data.name}`);
       return true;
     }
+
+    console.log(`✅ 업데이트 완료: ${data.name} (구독자: ${data.subscribers}명)`);
+    return true;
   };
 
   // 메인 실행 함수
@@ -229,7 +145,7 @@ export async function updateExistingStreamers() {
         continue;
       }
 
-      // 채널 세부 정보 가져오기
+      // 채널 세부 정보 가져오기 (유틸리티 함수 사용)
       const channelDetails = await getChannelDetails(streamer.id);
 
       if (!channelDetails.success) {
@@ -238,8 +154,13 @@ export async function updateExistingStreamers() {
         continue;
       }
 
-      const { subscribers, latestUploadDate, profileImage, description } =
-        channelDetails.data;
+      if (!channelDetails.data) {
+        console.log(`⚠️ 채널 데이터 누락: ${streamer.name}`);
+        failCount++;
+        continue;
+      }
+
+      const { subscribers, latestUploadDate, profileImage, description } = channelDetails.data;
 
       // 업데이트 수행
       const result = await updateStreamer({

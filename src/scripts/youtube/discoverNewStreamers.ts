@@ -1,8 +1,12 @@
 import dotenv from "dotenv";
-import axios from "axios";
 import { createClient } from "@supabase/supabase-js";
-
 import { gameKeywords, gameTypeToKeyword } from "../constants/gameKeywords";
+import {
+  searchChannels,
+  getChannelDetails,
+  isKoreanText,
+} from "./utils/channels";
+import { isGameChannel } from "./utils/video";
 
 /**
  * 신규 스트리머 발굴 스크립트
@@ -24,8 +28,6 @@ export async function discoverNewStreamers() {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-  const apiKey = process.env.YOUTUBE_API_KEY!;
-
   const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
   // 커맨드라인 인자 파싱
@@ -44,161 +46,7 @@ export async function discoverNewStreamers() {
     }
   }
 
-  // 타입 정의
-  type ChannelDetailsResult =
-    | { success: true; data: { subscribers: number; latestUploadDate: Date } }
-    | { success: false; message: string };
-
-  // 한글 여부 판별
-  const isKoreanText = (text: string) => {
-    const koreanMatches = text.match(/[\uac00-\ud7af]/g) || [];
-    const ratio = koreanMatches.length / text.length;
-    return ratio > 0.2; // 20% 이상이면 한국어로 간주
-  };
-
-  // Search API 호출해서 채널 리스트 가져오기
-  const searchChannels = async (query: string) => {
-    try {
-      const response = await axios.get(
-        "https://www.googleapis.com/youtube/v3/search",
-        {
-          params: {
-            part: "snippet",
-            q: query,
-            type: "channel",
-            maxResults: 20,
-            key: apiKey,
-          },
-        }
-      );
-      return response.data.items || [];
-    } catch (err) {
-      console.error(`❌ Search API 실패: ${query}`, err);
-      return [];
-    }
-  };
-
-  // 채널 세부 정보 가져오기 (중복 API 호출 방지)
-  const getChannelDetails = async (
-    channelId: string
-  ): Promise<ChannelDetailsResult> => {
-    try {
-      // 한 번의 API 호출로 여러 정보를 함께 가져옴
-      const { data: channelData } = await axios.get(
-        "https://www.googleapis.com/youtube/v3/channels",
-        {
-          params: {
-            part: "contentDetails,statistics",
-            id: channelId,
-            key: apiKey,
-          },
-        }
-      );
-
-      if (!channelData.items?.length) {
-        return { success: false, message: "채널 정보 없음" };
-      }
-
-      const channelItem = channelData.items[0];
-
-      // 구독자 수 확인
-      const statistics = channelItem.statistics || {};
-      const subscriberCount = statistics.subscriberCount;
-      const hiddenSubscriberCount = statistics.hiddenSubscriberCount;
-
-      // 구독자 수 비공개 채널 스킵
-      if (hiddenSubscriberCount) {
-        return { success: false, message: "구독자 수 비공개" };
-      }
-
-      // 구독자 수 1,000명 미만 스킵
-      const subscribers = parseInt(subscriberCount || "0", 10);
-      if (subscribers < 1000) {
-        return { success: false, message: `구독자 수 미달: ${subscribers}명` };
-      }
-
-      // 업로드 플레이리스트 ID
-      const uploadsPlaylistId =
-        channelItem?.contentDetails?.relatedPlaylists?.uploads;
-      if (!uploadsPlaylistId) {
-        return { success: false, message: "업로드 플레이리스트 정보 없음" };
-      }
-
-      // 최신 동영상 정보 가져오기 (한 번만 호출)
-      const { data: playlistData } = await axios.get(
-        "https://www.googleapis.com/youtube/v3/playlistItems",
-        {
-          params: {
-            part: "snippet,contentDetails",
-            playlistId: uploadsPlaylistId,
-            maxResults: 1,
-            key: apiKey,
-          },
-        }
-      );
-
-      if (!playlistData.items?.length) {
-        return { success: false, message: "동영상 정보 없음" };
-      }
-
-      const latestVideo = playlistData.items[0];
-      const videoId = latestVideo.contentDetails?.videoId;
-      const publishedAt = latestVideo.snippet?.publishedAt;
-
-      if (!publishedAt) {
-        return { success: false, message: "업로드 날짜 정보 없음" };
-      }
-
-      const latestUploadDate = new Date(publishedAt);
-
-      // 한 달 이내 업로드 확인
-      const daysSinceUpload =
-        (Date.now() - latestUploadDate.getTime()) / (1000 * 60 * 60 * 24);
-      if (daysSinceUpload > 30) {
-        return { success: false, message: "최근 1개월 업로드 없음" };
-      }
-
-      // 게임 채널 확인 (필요 시만 추가 API 호출)
-      let isGameChannel = false;
-
-      if (videoId) {
-        try {
-          const videoRes = await axios.get(
-            "https://www.googleapis.com/youtube/v3/videos",
-            {
-              params: {
-                part: "snippet",
-                id: videoId,
-                key: apiKey,
-              },
-            }
-          );
-          const categoryId = videoRes.data.items[0]?.snippet?.categoryId;
-          isGameChannel = categoryId === "20"; // 20 = 게임
-        } catch (err) {
-          console.error(`❌ 동영상 정보 가져오기 실패: ${videoId}`, err);
-        }
-      }
-
-      if (!isGameChannel) {
-        return { success: false, message: "게임 채널 아님" };
-      }
-
-      // 성공시 필요 정보 반환
-      return {
-        success: true,
-        data: {
-          subscribers,
-          latestUploadDate,
-        },
-      };
-    } catch (err) {
-      console.error(`❌ 채널 세부 정보 가져오기 실패: ${channelId}`, err);
-      return { success: false, message: "API 호출 오류" };
-    }
-  };
-
-  // Supabase 업서트
+  // Supabase 업서트 함수
   const upsertStreamer = async (data: {
     id: string;
     name: string;
@@ -211,6 +59,7 @@ export async function discoverNewStreamers() {
   }) => {
     const now = new Date().toISOString();
 
+    // 1. 메인 streamer 테이블 업서트
     const { error } = await supabase.from("streamers").upsert({
       id: data.id,
       name: data.name,
@@ -229,12 +78,36 @@ export async function discoverNewStreamers() {
     });
 
     if (error) {
-      console.error("❌ Supabase 업서트 실패:", error);
+      console.error("❌ Supabase streamer 업서트 실패:", error);
       return false;
-    } else {
-      console.log(`✅ 저장 완료: ${data.name} (구독자: ${data.subscribers}명)`);
+    }
+
+    // 2. streamer_platforms 테이블 업서트
+    const { error: platformError } = await supabase
+      .from("streamer_platforms")
+      .upsert({
+        streamer_id: data.id,
+        platform: "youtube",
+        platform_id: data.id, // YouTube는 채널 ID가 streamer ID와 동일
+        channel_url: data.channelUrl,
+        profile_image_url: data.profileImage,
+        subscribers: data.subscribers,
+        latest_uploaded_at: data.latestUploadDate
+          ? data.latestUploadDate.toISOString()
+          : null,
+        created_at: now,
+        updated_at: now,
+      });
+
+    if (platformError) {
+      console.error("❌ Supabase platform 업서트 실패:", platformError);
+      // 메인 스트리머는 저장됐으므로 true 반환
+      console.log(`⚠️ 플랫폼 저장 실패했으나 스트리머는 저장됨: ${data.name}`);
       return true;
     }
+
+    console.log(`✅ 저장 완료: ${data.name} (구독자: ${data.subscribers}명)`);
+    return true;
   };
 
   // 스트리머-키워드 매핑
@@ -242,7 +115,6 @@ export async function discoverNewStreamers() {
     streamerId: string,
     gameType: string
   ) => {
-
     // 게임 타입에 맞는 키워드 찾기
     const keywordName = gameTypeToKeyword[gameType];
     if (!keywordName) {
@@ -358,8 +230,9 @@ export async function discoverNewStreamers() {
         console.log(`\n🔎 키워드: "${keyword}" 검색 중...`);
         totalSearches++;
 
-        // 키워드로 채널 검색
-        const channels = await searchChannels(keyword);
+        // 키워드로 채널 검색 (유틸리티 함수 사용)
+        const searchResult = await searchChannels(keyword);
+        const channels = searchResult.items || [];
         console.log(
           `ℹ️ "${keyword}" 검색 결과: ${channels.length}개 채널 발견`
         );
@@ -394,7 +267,7 @@ export async function discoverNewStreamers() {
             continue;
           }
 
-          // 채널 세부 정보 가져오기
+          // 채널 세부 정보 가져오기 (유틸리티 함수 사용)
           console.log(`🔍 채널 세부 정보 검사 중: ${snippet.title}`);
           const channelDetails = await getChannelDetails(channelId);
 
@@ -403,14 +276,31 @@ export async function discoverNewStreamers() {
             continue;
           }
 
-          const { subscribers, latestUploadDate } = channelDetails.data;
+          // data 속성이 항상 존재하는지 확인
+          if (!channelDetails.data) {
+            console.log(`🚫 채널 세부 정보 없음: ${snippet.title}`);
+            continue;
+          }
+
+          // 게임 채널 확인
+          if (channelDetails.data.videoId) {
+            const isGame = await isGameChannel(channelDetails.data.videoId);
+            if (!isGame) {
+              console.log(`🚫 게임 채널 아님: ${snippet.title}`);
+              continue;
+            }
+          }
+
+          const { subscribers, latestUploadDate, profileImage } =
+            channelDetails.data;
 
           // 검증 완료된 채널 저장
           const streamerSaved = await upsertStreamer({
             id: channelId,
             name: snippet.title,
             description: snippet.description || "",
-            profileImage: snippet.thumbnails?.default?.url || "",
+            profileImage:
+              profileImage || snippet.thumbnails?.default?.url || "",
             subscribers: subscribers,
             channelUrl: `https://www.youtube.com/channel/${channelId}`,
             gameType: gameType,

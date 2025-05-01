@@ -18,7 +18,7 @@ export default function HomeClient() {
   const [isVisible, setIsVisible] = useState(false);
   const [keywords, setKeywords] = useState<string[]>([]);
   const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
-  // const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
   // const [selectedGender, setSelectedGender] = useState<string | null>(null);
   const [results, setResults] = useState<Streamer[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,31 +56,40 @@ export default function HomeClient() {
   const fetchStreamers = () => {
     if (selectedKeywords.length === 0) return;
     const query = selectedKeywords.join(",");
-    router.push(`/?keywords=${query}`);
+    const platformQuery = selectedPlatform ? `&platform=${selectedPlatform}` : "";
+    router.push(`/?keywords=${query}${platformQuery}`);
   };
+  
 
-  const doFetchStreamers = async (keywords: string[]) => {
+  const doFetchStreamers = async (keywords: string[], platform?: string | null) => {
     setLoading(true);
-
+  
     const { data: keywordMatches } = await supabase
       .from("keywords")
       .select("id")
       .in("name", keywords);
-
+  
     const keywordIds = (keywordMatches ?? []).map((k) => k.id);
-
+  
     const { data: mappings } = await supabase
       .from("streamer_keywords")
       .select("streamer_id")
       .in("keyword_id", keywordIds);
-
+  
     const matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
-
-    let query = supabase.from("streamers").select("*");
-    if (matchedStreamerIds.length > 0) {
-      query = query.in("id", matchedStreamerIds);
+  
+    if (matchedStreamerIds.length === 0) {
+      setResults([]); // 🔥 조건 없으면 바로 빈 결과 반환
+      setLoading(false);
+      return;
     }
-
+  
+    let query = supabase.from("streamers").select("*").in("id", matchedStreamerIds);
+  
+    if (platform) {
+      query = query.eq("platform", platform);
+    }
+  
     const { data: finalStreamers } = await query;
     setResults(finalStreamers || []);
     setLoading(false);
@@ -96,9 +105,12 @@ export default function HomeClient() {
 
   useEffect(() => {
     const keywordsFromURL = searchParams.get("keywords")?.split(",") || [];
+    const platformFromURL = searchParams.get("platform") || null;
+  
     if (keywordsFromURL.length > 0) {
       setSelectedKeywords(keywordsFromURL);
-      doFetchStreamers(keywordsFromURL);
+      setSelectedPlatform(platformFromURL);
+      doFetchStreamers(keywordsFromURL, platformFromURL);
     }
   }, [searchParams]);
 
@@ -109,10 +121,10 @@ export default function HomeClient() {
       <KeywordSelector
         keywords={keywords}
         selectedKeywords={selectedKeywords}
-        // selectedPlatform={selectedPlatform}
+        selectedPlatform={selectedPlatform}
         // selectedGender={selectedGender}
         onToggleKeyword={toggleKeyword}
-        // onSelectPlatform={setSelectedPlatform}
+        onSelectPlatform={setSelectedPlatform}
         // onSelectGender={setSelectedGender}
       />
 
@@ -140,7 +152,7 @@ export default function HomeClient() {
         {results.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {results
-              .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
+              // .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
               .map((s) => (
                 <StreamerCard key={s.id} streamer={s} />
               ))}

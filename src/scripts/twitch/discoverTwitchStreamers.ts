@@ -179,6 +179,7 @@ export async function discoverTwitchStreamers() {
   console.log(`ℹ️ 기존 ${existingIds.size}명의 스트리머 ID 로드 완료`);
 
   const topGames = await getTopGames(20);
+  console.log("✅ getTopGames 결과:", topGames);
 
   const filteredGameTypes = targetGameTypes
     ? Object.keys(gameTypeToKeyword).filter((gt) =>
@@ -198,11 +199,12 @@ export async function discoverTwitchStreamers() {
       continue;
     }
 
-    const isInTopGames = topGames.some((g) => g.id === twitchGameId);
-    if (!isInTopGames) {
-      console.log(`⚠️ [${gameType}] Twitch topGames에 포함되지 않음`);
-      continue;
-    }
+    // 시간 때에 따라서 탑 20게임이 달라질 수 있음
+    // const isInTopGames = topGames.some((g) => String(g.id) === twitchGameId);
+    // if (!isInTopGames) {
+    //   console.log(`⚠️ [${gameType}] Twitch topGames에 포함되지 않음`);
+    //   continue;
+    // }
 
     console.log(`\n🎯 [${gameType}] 게임 ID: ${twitchGameId} 수집 시작...`);
     const streams = await getTopStreamersByGame(twitchGameId, 50, "ko");

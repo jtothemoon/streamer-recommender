@@ -7,6 +7,7 @@ import Image from "next/image";
 
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import YoutubeIcon from "@/components/icons/YoutubeIcon";
+import TwitchIcon from "@/components/icons/TwitchIcon";
 
 type Streamer = {
   id: string;
@@ -89,8 +90,8 @@ export default function StreamerDetail({ id }: { id: string }) {
 
         {/* 기본 정보 */}
         <div className="flex justify-center gap-2 mt-6 text-sm text-gray-400 items-center">
-          {/* 유튜브 아이콘 */}
-          <YoutubeIcon />
+          {streamer.platform === "youtube" && <YoutubeIcon />}
+          {streamer.platform === "twitch" && <TwitchIcon />}
           <span>{streamer.platform.toUpperCase()}</span>
 
           {streamer.gender !== "unknown" && <span>🚻 {streamer.gender}</span>}
@@ -99,7 +100,7 @@ export default function StreamerDetail({ id }: { id: string }) {
             👥{" "}
             {streamer.subscribers
               ? `${streamer.subscribers.toLocaleString()}명`
-              : "정보 없음"}
+              : "구독자 수 제공 안됨"}
           </span>
         </div>
 
