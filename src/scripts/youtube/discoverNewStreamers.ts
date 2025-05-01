@@ -298,7 +298,7 @@ export async function discoverNewStreamers() {
           const streamerSaved = await upsertStreamer({
             id: channelId,
             name: snippet.title,
-            description: snippet.description || "",
+            description: channelDetails.data.description || "",
             profileImage:
               profileImage || snippet.thumbnails?.default?.url || "",
             subscribers: subscribers,

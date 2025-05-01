@@ -82,7 +82,7 @@ export async function updateExistingStreamers() {
           ? data.latestUploadDate.toISOString()
           : null,
         updated_at: now,
-      });
+      }, { onConflict: 'platform,platform_id' });
 
     if (platformError) {
       console.error(`❌ 플랫폼 정보 업데이트 실패 (${data.name}):`, platformError);

@@ -1,4 +1,3 @@
-// src/scripts/youtube/utils/channels.ts
 import { callYoutubeApi } from './api';
 
 // 채널 정보 타입 정의
