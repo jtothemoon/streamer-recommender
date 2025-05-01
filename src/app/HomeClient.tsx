@@ -54,9 +54,9 @@ export default function HomeClient() {
   };
 
   const fetchStreamers = () => {
-    if (selectedKeywords.length === 0) return;
-    const query = selectedKeywords.join(",");
-    const platformQuery = selectedPlatform ? `&platform=${selectedPlatform}` : "";
+    if (!selectedPlatform) return;
+    const query = selectedKeywords.length > 0 ? selectedKeywords.join(",") : "all";
+    const platformQuery = `&platform=${selectedPlatform}`;
     router.push(`/?keywords=${query}${platformQuery}`);
   };
   
@@ -64,19 +64,30 @@ export default function HomeClient() {
   const doFetchStreamers = async (keywords: string[], platform?: string | null) => {
     setLoading(true);
   
-    const { data: keywordMatches } = await supabase
-      .from("keywords")
-      .select("id")
-      .in("name", keywords);
+    let matchedStreamerIds: string[] = [];
   
-    const keywordIds = (keywordMatches ?? []).map((k) => k.id);
+    // 🔥 키워드 없으면 전체 streamers id 가져오기
+    if (keywords.length === 0 || keywords.includes("all")) {
+      const { data: allStreamers } = await supabase
+        .from("streamers")
+        .select("id");
   
-    const { data: mappings } = await supabase
-      .from("streamer_keywords")
-      .select("streamer_id")
-      .in("keyword_id", keywordIds);
+      matchedStreamerIds = (allStreamers ?? []).map((s) => s.id);
+    } else {
+      const { data: keywordMatches } = await supabase
+        .from("keywords")
+        .select("id")
+        .in("name", keywords);
   
-    const matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
+      const keywordIds = (keywordMatches ?? []).map((k) => k.id);
+  
+      const { data: mappings } = await supabase
+        .from("streamer_keywords")
+        .select("streamer_id")
+        .in("keyword_id", keywordIds);
+  
+      matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
+    }
   
     if (matchedStreamerIds.length === 0) {
       setResults([]);
@@ -84,7 +95,6 @@ export default function HomeClient() {
       return;
     }
   
-    // 여기를 수정 - streamer_platforms 테이블과 JOIN
     const { data: finalStreamers } = await supabase
       .from("streamers")
       .select(`
@@ -93,17 +103,17 @@ export default function HomeClient() {
       `)
       .in("id", matchedStreamerIds);
   
-    // 플랫폼 필터링이 필요하면 여기서 JS로 처리
     let filteredResults = finalStreamers || [];
     if (platform) {
-      filteredResults = filteredResults.filter(streamer => 
-        streamer.platforms.some((p: {platform: string}) => p.platform === platform)
+      filteredResults = filteredResults.filter((streamer) =>
+        streamer.platforms.some((p: { platform: string }) => p.platform === platform)
       );
     }
   
     setResults(filteredResults);
     setLoading(false);
   };
+  
 
   useEffect(() => {
     const loadKeywords = async () => {
@@ -117,11 +127,17 @@ export default function HomeClient() {
     const keywordsFromURL = searchParams.get("keywords")?.split(",") || [];
     const platformFromURL = searchParams.get("platform") || null;
   
-    if (keywordsFromURL.length > 0) {
-      setSelectedKeywords(keywordsFromURL);
-      setSelectedPlatform(platformFromURL);
-      doFetchStreamers(keywordsFromURL, platformFromURL);
+    if (!platformFromURL) {
+      // ✅ 플랫폼 없으면 추천 실행 안 함
+      return;
     }
+  
+    const effectiveKeywords = keywordsFromURL.length > 0 ? keywordsFromURL : ["all"];
+  
+    setSelectedKeywords(effectiveKeywords);
+    setSelectedPlatform(platformFromURL);
+  
+    doFetchStreamers(effectiveKeywords, platformFromURL);
   }, [searchParams]);
 
   return (
@@ -143,11 +159,11 @@ export default function HomeClient() {
         <button
           onClick={fetchStreamers}
           className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 min-w-[120px] ${
-            selectedKeywords.length === 0
+            !selectedPlatform
               ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
               : "bg-black text-white dark:bg-gray-200 dark:text-black hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors cursor-pointer"
           }`}
-          disabled={loading || selectedKeywords.length === 0}
+          disabled={loading || !selectedPlatform}
         >
           {loading ? (
             <LoadingSpinner text="추천 중..." size="small" />
