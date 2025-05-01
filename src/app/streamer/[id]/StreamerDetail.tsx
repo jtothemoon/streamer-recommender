@@ -1,5 +1,6 @@
-"use client";
+'use client';
 
+import { Streamer } from "@/types/streamer";
 import { supabase } from "@/lib/supabaseClient";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -8,19 +9,6 @@ import Image from "next/image";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import YoutubeIcon from "@/components/icons/YoutubeIcon";
 import TwitchIcon from "@/components/icons/TwitchIcon";
-
-type Streamer = {
-  id: string;
-  name: string;
-  description: string;
-  platform: string;
-  gender: string;
-  profile_image_url: string;
-  channel_url: string;
-  created_at: string;
-  subscribers: number | null;
-  latest_uploaded_at: string | null;
-};
 
 export default function StreamerDetail({ id }: { id: string }) {
   const router = useRouter();
@@ -31,7 +19,10 @@ export default function StreamerDetail({ id }: { id: string }) {
     const fetchStreamer = async () => {
       const { data, error } = await supabase
         .from("streamers")
-        .select("*")
+        .select(`
+          *,
+          platforms:streamer_platforms(*)
+        `)
         .eq("id", id)
         .single();
 
@@ -89,10 +80,15 @@ export default function StreamerDetail({ id }: { id: string }) {
         </p>
 
         {/* 기본 정보 */}
-        <div className="flex justify-center gap-2 mt-6 text-sm text-gray-400 items-center">
-          {streamer.platform === "youtube" && <YoutubeIcon />}
-          {streamer.platform === "twitch" && <TwitchIcon />}
-          <span>{streamer.platform.toUpperCase()}</span>
+        <div className="flex flex-wrap justify-center gap-3 mt-6 text-sm text-gray-400 items-center">
+          {/* 플랫폼 정보 배열로 표시 */}
+          {streamer.platforms && streamer.platforms.map((p) => (
+            <div key={p.id} className="flex items-center gap-1">
+              {p.platform === "youtube" && <YoutubeIcon />}
+              {p.platform === "twitch" && <TwitchIcon />}
+              <span>{p.platform.toUpperCase()}</span>
+            </div>
+          ))}
 
           {streamer.gender !== "unknown" && <span>🚻 {streamer.gender}</span>}
 
@@ -113,14 +109,30 @@ export default function StreamerDetail({ id }: { id: string }) {
         )}
 
         {/* 채널 링크 */}
-        <a
-          href={streamer.channel_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block mt-6 px-6 py-2 bg-[#00C7AE] text-white rounded-full font-semibold hover:bg-[#00b19c] transition-colors"
-        >
-          🔗 채널 방문하기
-        </a>
+        {streamer.platforms && streamer.platforms.length > 0 ? (
+          <div className="mt-6 flex flex-wrap gap-3 justify-center">
+            {streamer.platforms.map((p) => (
+              <a
+                key={p.id}
+                href={p.channel_url || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block px-6 py-2 bg-[#00C7AE] text-white rounded-full font-semibold hover:bg-[#00b19c] transition-colors"
+              >
+                🔗 {p.platform.toUpperCase()} 방문하기
+              </a>
+            ))}
+          </div>
+        ) : (
+          <a
+            href={streamer.channel_url || '#'}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block mt-6 px-6 py-2 bg-[#00C7AE] text-white rounded-full font-semibold hover:bg-[#00b19c] transition-colors"
+          >
+            🔗 채널 방문하기
+          </a>
+        )}
       </div>
     </main>
   );

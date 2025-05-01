@@ -56,24 +56,29 @@ export function StreamerCard({ streamer }: { streamer: Streamer }) {
         <span className="text-lg">👥</span>
         {streamer.platform === "youtube"
           ? `${formatSubscribers(streamer.subscribers)} 구독자`
-          : '구독자 수 제공 안됨'}
+          : "구독자 수 제공 안됨"}
       </div>
       <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1 truncate">
         {streamer.description || "채널 설명 없음"}
       </p>
       <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
-        {streamer.platform === "youtube" && (
-          <>
-            <YoutubeIcon />
-            <span>YOUTUBE</span>
-          </>
-        )}
-        {streamer.platform === "twitch" && (
-          <>
-            <TwitchIcon />
-            <span>TWITCH</span>
-          </>
-        )}
+        {streamer.platforms &&
+          streamer.platforms.map((platform) => (
+            <div key={platform.id} className="flex items-center gap-1">
+              {platform.platform === "youtube" && (
+                <>
+                  <YoutubeIcon />
+                  <span>YOUTUBE</span>
+                </>
+              )}
+              {platform.platform === "twitch" && (
+                <>
+                  <TwitchIcon />
+                  <span>TWITCH</span>
+                </>
+              )}
+            </div>
+          ))}
         {streamer.gender !== "unknown" && (
           <>
             <span className="mx-1 text-gray-300">|</span> 🚻 {streamer.gender}
@@ -81,7 +86,7 @@ export function StreamerCard({ streamer }: { streamer: Streamer }) {
         )}
       </div>
       <a
-        href={streamer.channel_url}
+        href={streamer.channel_url || '#'}
         target="_blank"
         rel="noreferrer"
         onClick={(e) => e.stopPropagation()}

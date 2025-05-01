@@ -79,19 +79,29 @@ export default function HomeClient() {
     const matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
   
     if (matchedStreamerIds.length === 0) {
-      setResults([]); // 🔥 조건 없으면 바로 빈 결과 반환
+      setResults([]);
       setLoading(false);
       return;
     }
   
-    let query = supabase.from("streamers").select("*").in("id", matchedStreamerIds);
+    // 여기를 수정 - streamer_platforms 테이블과 JOIN
+    const { data: finalStreamers } = await supabase
+      .from("streamers")
+      .select(`
+        *,
+        platforms:streamer_platforms(*)
+      `)
+      .in("id", matchedStreamerIds);
   
+    // 플랫폼 필터링이 필요하면 여기서 JS로 처리
+    let filteredResults = finalStreamers || [];
     if (platform) {
-      query = query.eq("platform", platform);
+      filteredResults = filteredResults.filter(streamer => 
+        streamer.platforms.some((p: {platform: string}) => p.platform === platform)
+      );
     }
   
-    const { data: finalStreamers } = await query;
-    setResults(finalStreamers || []);
+    setResults(filteredResults);
     setLoading(false);
   };
 
