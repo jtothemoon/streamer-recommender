@@ -150,6 +150,44 @@ export async function discoverYoutubeStreamers() {
   const main = async () => {
     console.log("🔍 유튜브 스트리머 발굴 시작...");
 
+    const { data: gameCategories, error: categoryError } = await supabase
+      .from("youtube_game_categories")
+      .select("id, name, display_name")
+      .order("sort_order", { ascending: true });
+
+    if (categoryError || !gameCategories || gameCategories.length === 0) {
+      console.error(
+        "❌ 게임 카테고리 조회 실패:",
+        categoryError || "카테고리가 없습니다."
+      );
+      return;
+    }
+
+    console.log(`ℹ️ DB에서 ${gameCategories.length}개 게임 카테고리 로드 완료`);
+
+    // 동적으로 gameKeywords 객체 구성
+    // 카테고리 이름을 기준으로 기존 gameKeywords에서 키워드 가져오기
+    // 없으면 기본 키워드 패턴 사용
+    const dbGameKeywords: { [key: string]: string[] } = {};
+    
+    for (const category of gameCategories) {
+      const categoryName = category.name;
+      const displayName = category.display_name;
+      
+      // 기존 gameKeywords에 해당 카테고리가 있으면 그 키워드 사용
+      if (gameKeywords[categoryName]) {
+        dbGameKeywords[categoryName] = gameKeywords[categoryName];
+      } else {
+        // 없으면 기본 키워드 패턴 생성
+        dbGameKeywords[categoryName] = [
+          `${categoryName} 스트리머`,
+          `${categoryName} 방송`,
+          `${categoryName} 유튜버`,
+          `${displayName} streamer`
+        ];
+      }
+    }
+
     // 기존 스트리머 ID 목록 가져오기 (중복 방지용)
     const { data: existingStreamers, error } = await supabase
       .from("youtube_streamers")
@@ -160,7 +198,9 @@ export async function discoverYoutubeStreamers() {
       return;
     }
 
-    const existingIds = new Set(existingStreamers.map((s) => s.youtube_channel_id));
+    const existingIds = new Set(
+      existingStreamers.map((s) => s.youtube_channel_id)
+    );
     console.log(`ℹ️ 기존 ${existingIds.size}명의 스트리머 ID 로드 완료`);
 
     let newStreamersCount = 0;
@@ -168,10 +208,10 @@ export async function discoverYoutubeStreamers() {
     let discoveredChannels = 0;
     let mappingCount = 0;
 
-    // 필터링된 게임 타입
+    // 필터링된 게임 타입 (이제 DB에서 가져온 카테고리 사용)
     const filteredGameTypes = targetGameTypes
-      ? Object.keys(gameKeywords).filter((gt) => targetGameTypes.includes(gt))
-      : Object.keys(gameKeywords);
+      ? gameCategories.filter(cat => targetGameTypes.includes(cat.name)).map(cat => cat.name)
+      : gameCategories.map(cat => cat.name);
 
     console.log(`ℹ️ 검색 대상 게임 타입: ${filteredGameTypes.join(", ")}`);
 
@@ -179,15 +219,15 @@ export async function discoverYoutubeStreamers() {
     for (const gameType of filteredGameTypes) {
       console.log(`\n🎯 [${gameType}] 키워드 검색 시작...`);
 
-      // 해당 게임 타입의 모든 키워드
-      const allKeywords = gameKeywords[gameType];
+      // DB에서 구성한 키워드 객체 사용
+      const allKeywords = dbGameKeywords[gameType] || [];
 
       // 필터링된 키워드
       const filteredKeywords = targetKeywords
         ? allKeywords.filter((kw) => targetKeywords.includes(kw))
         : allKeywords;
 
-      if (filteredKeywords.length === 0) {
+      if (allKeywords.length === 0) {
         console.log(`⚠️ [${gameType}] 검색할 키워드가 없습니다.`);
         continue;
       }
@@ -258,7 +298,8 @@ export async function discoverYoutubeStreamers() {
             channel_id: channelId,
             name: snippet.title,
             description: description || "",
-            profile_image_url: profileImage || snippet.thumbnails?.default?.url || "",
+            profile_image_url:
+              profileImage || snippet.thumbnails?.default?.url || "",
             subscribers: subscribers,
             channel_url: `https://www.youtube.com/channel/${channelId}`,
             game_type: gameType,

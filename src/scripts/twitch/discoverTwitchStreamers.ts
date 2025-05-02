@@ -31,7 +31,7 @@ export async function discoverTwitchStreamers() {
   const args = process.argv.slice(2);
   let skipMapping = false;
   let language = "ko"; // 기본값 한국어
-  let limit = 50; // 스트리머 수집 제한 (기본값 100명)
+  let limit = 100; // 스트리머 수집 제한 (기본값 100명)
 
   for (const arg of args) {
     if (arg === "--skip-mapping") {
