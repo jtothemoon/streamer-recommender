@@ -14,14 +14,6 @@ export const gameTypeToKeyword: { [key: string]: string } = {
   "로스트아크": "로스트아크",
 };
 
-export const gameDetectionKeywords: { [key: string]: string[] } = {
-  "롤": ["롤", "리그오브레전드", "league of legends", "lol"],
-  "배틀그라운드": ["배틀그라운드", "배그", "pubg", "배틀", "battlegrounds"],
-  "발로란트": ["발로란트", "발로", "valorant"],
-  "마인크래프트": ["마인크래프트", "마크", "minecraft"],
-  "로스트아크": ["로스트아크", "로아", "lost ark"],
-};
-
 export const gameTypeToTwitchGameId: { [key: string]: string } = {
   "롤": "21779",
   "배틀그라운드": "493057",

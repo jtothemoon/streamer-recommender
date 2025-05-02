@@ -1,65 +1,84 @@
-"use client";
+'use client';
 
-import { useState, useEffect } from "react";
-import { ChevronUpIcon } from "@heroicons/react/24/solid";
-import { useFavoriteStore } from "@/store/favoriteStore";
-import { YoutubeStreamer } from "@/types/youtube";
-import { StreamerCard } from "@/components/streamer/StreamerCard";
+import { useState, useEffect } from 'react';
+import { ChevronUpIcon } from '@heroicons/react/24/solid';
+import { useFavoriteStore } from '@/store/favoriteStore';
+import { YoutubeStreamer } from '@/types/youtube';
+import { TwitchStreamer } from '@/types/twitch';
+import { YoutubeStreamerCard } from '@/components/streamer/YoutubeStreamerCard';
+import { TwitchStreamerCard } from '@/components/streamer/TwitchStreamerCard';
 
 export default function FavoritesClient() {
   const [isVisible, setIsVisible] = useState(false);
   const { getFavorites } = useFavoriteStore();
-  const [favorites, setFavorites] = useState<YoutubeStreamer[]>([]);
+  const [youtubeFavorites, setYoutubeFavorites] = useState<YoutubeStreamer[]>([]);
+  const [twitchFavorites, setTwitchFavorites] = useState<TwitchStreamer[]>([]);
 
   useEffect(() => {
     const toggleVisibility = () => {
-      if (window.scrollY > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
+      setIsVisible(window.scrollY > 300);
     };
 
-    window.addEventListener("scroll", toggleVisibility);
-    return () => window.removeEventListener("scroll", toggleVisibility);
+    window.addEventListener('scroll', toggleVisibility);
+    return () => window.removeEventListener('scroll', toggleVisibility);
   }, []);
 
   useEffect(() => {
-    // 초기 데이터 설정
-    setFavorites(getFavorites());
-    
-    // Zustand store 변경 감지하여 업데이트
+    const allFavorites = getFavorites();
+
+    setYoutubeFavorites(
+      allFavorites.filter((s): s is YoutubeStreamer => s.platform === 'youtube')
+    );
+
+    setTwitchFavorites(
+      allFavorites.filter((s): s is TwitchStreamer => s.platform === 'twitch')
+    );
+
     const unsubscribe = useFavoriteStore.subscribe((state) => {
-      setFavorites(state.getFavorites());
+      const updated = state.getFavorites();
+      setYoutubeFavorites(updated.filter((s): s is YoutubeStreamer => s.platform === 'youtube'));
+      setTwitchFavorites(updated.filter((s): s is TwitchStreamer => s.platform === 'twitch'));
     });
-    
+
     return () => unsubscribe();
   }, [getFavorites]);
 
   const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">❤️ 즐겨찾기한 스트리머</h1>
 
-      {/* 결과 출력 */}
       <section className="mt-10">
-        {favorites.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {favorites
-              .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
-              .map((s) => (
-                <StreamerCard key={s.id} streamer={s} />
-              ))}
-          </div>
+        {youtubeFavorites.length > 0 && (
+          <>
+            <h2 className="text-2xl font-bold mb-4">🎥 유튜브 즐겨찾기</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {youtubeFavorites
+                .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
+                .map((s) => (
+                  <YoutubeStreamerCard key={s.id} streamer={s} />
+                ))}
+            </div>
+          </>
         )}
 
-        {favorites.length === 0 && (
+        {twitchFavorites.length > 0 && (
+          <>
+            <h2 className="text-2xl font-bold mt-10 mb-4">💜 트위치 즐겨찾기</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+              {twitchFavorites
+                .sort((a, b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0))
+                .map((s) => (
+                  <TwitchStreamerCard key={s.id} streamer={s} />
+                ))}
+            </div>
+          </>
+        )}
+
+        {youtubeFavorites.length === 0 && twitchFavorites.length === 0 && (
           <div className="text-center py-12">
             <p className="text-gray-500 dark:text-gray-400">즐겨찾기한 스트리머가 없습니다.</p>
             <p className="text-gray-500 dark:text-gray-400 mt-2">

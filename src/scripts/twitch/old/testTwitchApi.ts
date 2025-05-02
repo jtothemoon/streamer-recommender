@@ -1,5 +1,5 @@
 import dotenv from 'dotenv';
-import { getTopGames, getTopStreamersByGame, getUsersByIds } from './utils/streamers';
+import { getTopGames, getTopStreamersByGame, getUsersByIds } from '../utils/streamers';
 
 dotenv.config();
 

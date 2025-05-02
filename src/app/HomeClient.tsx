@@ -5,12 +5,15 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 import { supabase } from "@/lib/supabaseClient";
 import { YoutubeStreamer } from "@/types/youtube";
+import { TwitchStreamer } from "@/types/twitch";
 import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
-import { fetchCategories } from "@/utils/fetchCategories";
+import { fetchYoutubeCategories } from "@/utils/fetchYoutubeCategories";
+import { fetchTwitchCategories } from "@/utils/fetchTwitchCategories";
 
 import { CategorySelector } from "@/components/streamer/CategorySelector";
-import { StreamerCard } from "@/components/streamer/StreamerCard";
+import { YoutubeStreamerCard } from "@/components/streamer/YoutubeStreamerCard";
+import { TwitchStreamerCard } from "@/components/streamer/TwitchStreamerCard";
 
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
@@ -19,7 +22,11 @@ export default function HomeClient() {
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  const [results, setResults] = useState<YoutubeStreamer[]>([]);
+  
+  // 플랫폼별 결과 상태 분리
+  const [youtubeResults, setYoutubeResults] = useState<YoutubeStreamer[]>([]);
+  const [twitchResults, setTwitchResults] = useState<TwitchStreamer[]>([]);
+  
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -54,7 +61,7 @@ export default function HomeClient() {
 
   const fetchStreamers = () => {
     if (!selectedPlatform) return;
-    const query = selectedCategories.length > 0 ? selectedCategories.join(",") : null;
+    const query = selectedCategories.length > 0 ? selectedCategories.join(",") : "";
     const platformQuery = `platform=${selectedPlatform}`;
     
     const url = query
@@ -64,12 +71,16 @@ export default function HomeClient() {
     router.push(url);
   };
 
+  // 플랫폼별 데이터 조회 로직
   const doFetchStreamers = async (categories: string[], platform?: string | null) => {
     setLoading(true);
+    
+    // 결과 초기화
+    setYoutubeResults([]);
+    setTwitchResults([]);
   
-    // 플랫폼별 쿼리 구성
     if (platform === 'youtube') {
-      // 유튜브 스트리머 가져오기 로직
+      // 유튜브 스트리머 조회
       let matchedStreamerIds: string[] = [];
 
       if (categories.length === 0) {
@@ -97,7 +108,6 @@ export default function HomeClient() {
       }
     
       if (matchedStreamerIds.length === 0) {
-        setResults([]);
         setLoading(false);
         return;
       }
@@ -108,21 +118,72 @@ export default function HomeClient() {
         .select("*")
         .in("id", matchedStreamerIds);
 
-      setResults(finalStreamers || []);
+      setYoutubeResults(finalStreamers || []);
     } 
-    // 향후 다른 플랫폼 추가 시 여기에 else if로 추가
+    else if (platform === 'twitch') {
+      // 트위치 스트리머 조회
+      let matchedStreamerIds: string[] = [];
+
+      if (categories.length === 0) {
+        // 카테고리 미선택 시 전체 트위치 스트리머 가져오기
+        const { data: allStreamers } = await supabase
+          .from("twitch_streamers")
+          .select("id");
+    
+        matchedStreamerIds = (allStreamers ?? []).map((s) => s.id);
+      } else {
+        // 카테고리 선택 시 해당 카테고리와 매핑된 스트리머만 가져오기
+        const { data: categoryMatches } = await supabase
+          .from("twitch_game_categories")
+          .select("id")
+          .in("name", categories);
+    
+        const categoryIds = (categoryMatches ?? []).map((k) => k.id);
+    
+        const { data: mappings } = await supabase
+          .from("twitch_streamer_categories")
+          .select("streamer_id")
+          .in("category_id", categoryIds);
+    
+        matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
+      }
+    
+      if (matchedStreamerIds.length === 0) {
+        setLoading(false);
+        return;
+      }
+    
+      // 최종 스트리머 데이터 가져오기
+      const { data: finalStreamers } = await supabase
+        .from("twitch_streamers")
+        .select("*")
+        .in("id", matchedStreamerIds);
+
+      setTwitchResults(finalStreamers || []);
+    }
     
     setLoading(false);
   };
 
+  // 플랫폼에 따라 카테고리 로드
   useEffect(() => {
     const loadCategories = async () => {
-      const data = await fetchCategories();
-      setCategories(data.map((c) => c.name));
+      if (selectedPlatform === 'youtube') {
+        const data = await fetchYoutubeCategories();
+        setCategories(data.map((c) => c.name));
+      } 
+      else if (selectedPlatform === 'twitch') {
+        const data = await fetchTwitchCategories();
+        setCategories(data.map((c) => c.name));
+      }
     };
-    loadCategories();
-  }, []);
+    
+    if (selectedPlatform) {
+      loadCategories();
+    }
+  }, [selectedPlatform]);
 
+  // URL 파라미터 변경 감지
   useEffect(() => {
     const categoriesParam = searchParams.get("categories");
     const categoriesFromURL = categoriesParam
@@ -141,6 +202,9 @@ export default function HomeClient() {
     doFetchStreamers(categoriesFromURL, platformFromURL);
   }, [searchParams]);
   
+  // 현재 플랫폼에 따른 결과
+  const results = selectedPlatform === 'youtube' ? youtubeResults : 
+                 selectedPlatform === 'twitch' ? twitchResults : [];
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
@@ -177,10 +241,16 @@ export default function HomeClient() {
       <section className="mt-10">
         {results.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {results
+            {selectedPlatform === 'youtube' && youtubeResults
               .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
               .map((s) => (
-                <StreamerCard key={s.id} streamer={s} />
+                <YoutubeStreamerCard key={s.id} streamer={s} />
+              ))}
+              
+            {selectedPlatform === 'twitch' && twitchResults
+              .sort((a, b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0))
+              .map((s) => (
+                <TwitchStreamerCard key={s.id} streamer={s} />
               ))}
           </div>
         )}
@@ -191,6 +261,7 @@ export default function HomeClient() {
           </p>
         )}
       </section>
+      
       {isVisible && (
         <button
           onClick={scrollToTop}

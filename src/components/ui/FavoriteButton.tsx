@@ -5,9 +5,13 @@ import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useFavoriteStore } from '@/store/favoriteStore';
 import { YoutubeStreamer } from '@/types/youtube';
+import { TwitchStreamer } from '@/types/twitch';
+
+// FavoriteStreamer 타입
+type FavoriteStreamer = YoutubeStreamer | TwitchStreamer;
 
 interface FavoriteButtonProps {
-  streamer: YoutubeStreamer;
+  streamer: FavoriteStreamer;
   className?: string;
 }
 
@@ -22,13 +26,13 @@ export default function FavoriteButton({ streamer, className = '' }: FavoriteBut
   const toggleFavorite = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (isFav) {
       removeFavorite(streamer.id);
     } else {
       addFavorite(streamer);
     }
-    
+
     setIsFav(!isFav);
   };
 

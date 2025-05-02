@@ -6,7 +6,7 @@ import { YoutubeGameCategory } from "@/types/youtube";
  * 
  * @returns 게임 카테고리 배열
  */
-export async function fetchCategories(): Promise<YoutubeGameCategory[]> {
+export async function fetchYoutubeCategories(): Promise<YoutubeGameCategory[]> {
   const { data, error } = await supabase
     .from("youtube_game_categories")
     .select("*")
