@@ -75,7 +75,7 @@ export function YoutubeStreamerCard({ streamer }: { streamer: YoutubeStreamer })
         target="_blank"
         rel="noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="inline-block mt-3 text-xs font-bold text-[#00C7AE] hover:text-[#CC0000] transition-colors"
+        className="inline-block mt-3 text-xs font-bold text-[#00C7AE] hover:text-[#00b19c] transition-colors"
       >
         🔗 채널 방문
       </a>

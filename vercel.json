@@ -1,8 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/cron/collect-streamers",
-      "schedule": "0 19 * * *"
+      "path": "/api/cron/twitch-collect",
+      "schedule": "0 * * * *"
     }
   ]
 }

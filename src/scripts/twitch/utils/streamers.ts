@@ -86,6 +86,17 @@ export async function getTopGames(limit: number = 20): Promise<TwitchGame[]> {
   return games.slice(0, limit);
 }
 
+// 한국어 방송 스트리머 가져오기 (딱 limit 개수만큼만)
+export async function getKoreanStreamers(limit: number = 100, language: string = "ko"): Promise<TwitchStream[]> {
+  const streams = await fetchAllPages<TwitchStream>(
+    '/streams',
+    { language: language, first: Math.min(limit, 100) }
+  );
+  
+  // 정확히 limit 개수만 반환
+  return streams.slice(0, limit);
+}
+
 // 채널 팔로워 수 가져오기 (이 부분은 OAuth 사용자 토큰 필요, 불가능할 수 있음)
 export async function getChannelFollowers(broadcasterId: string): Promise<number> {
   try {

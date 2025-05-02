@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import TwitchIcon from "../icons/TwitchIcon";
 import FavoriteButton from "../ui/FavoriteButton";
+import { useTwitchLiveStatus } from "@/hooks/useTwitchLiveStatus";
 
 interface TwitchStreamerCardProps {
   streamer: TwitchStreamer;
@@ -12,6 +13,11 @@ interface TwitchStreamerCardProps {
 
 export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
   const router = useRouter();
+
+  // 라이브 상태 가져오기
+  const { status } = useTwitchLiveStatus([streamer.twitch_id]);
+  const streamStatus = status?.[streamer.twitch_id];
+  const isLive = streamStatus?.isLive || false;
 
   const isNew = (() => {
     if (!streamer.created_at) return false;
@@ -29,8 +35,10 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
     return `${count}명`;
   }
 
-  // 현재 생방송 중인지 확인
-  const isLive = !!streamer.started_at;
+  // 시청자 수 - 라이브 중이면 실시간 데이터 사용
+  const viewerCount = isLive
+    ? streamStatus?.viewerCount
+    : streamer.viewer_count;
 
   return (
     <div
@@ -44,8 +52,13 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
       )}
 
       {isLive && (
-        <div className="absolute top-2 left-2 ml-8 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
-          LIVE
+        <div className="absolute top-2 left-2 ml-8 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse flex items-center gap-1">
+          <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
+          <span>
+            LIVE{" "}
+            {streamStatus?.viewerCount &&
+              `· ${formatViewers(streamStatus.viewerCount)}`}
+          </span>
         </div>
       )}
 
@@ -67,8 +80,18 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
 
       <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
         <span className="text-lg">👀</span>
-        {`${formatViewers(streamer.viewer_count)} 시청자`}
+        {`${formatViewers(viewerCount)} 시청자`}
       </div>
+
+      {/* 라이브 중일 때 게임명과 제목 표시 */}
+      {isLive && streamStatus?.gameName && (
+        <div className="mt-2 text-xs text-gray-500 dark:text-gray-300 text-center">
+          <p className="font-bold">{streamStatus.gameName}</p>
+          {streamStatus.title && (
+            <p className="truncate">{streamStatus.title}</p>
+          )}
+        </div>
+      )}
 
       <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1 truncate">
         {streamer.description || "채널 설명 없음"}
@@ -84,7 +107,7 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
         target="_blank"
         rel="noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="inline-block mt-3 text-[#00C7AE] text-xs font-bold hover:text-[#7a3cce] transition-colors"
+        className="inline-block mt-3 text-[#00C7AE] text-xs font-bold hover:text-[#00b19c] transition-colors"
       >
         🔗 채널 방문
       </a>
