@@ -3,7 +3,7 @@ import { discoverTwitchStreamers } from '@/scripts/twitch/discoverTwitchStreamer
 import { truncateTwitchTables } from '@/scripts/twitch/utils/truncateTables';
 
 export const dynamic = 'force-dynamic';
-export const maxDuration = 300; // 5분 (Vercel의 Hobby 플랜 제한)
+export const maxDuration = 60; // 1분 (Vercel의 Hobby 플랜 제한)
 
 export async function GET(request: Request) {
   try {
