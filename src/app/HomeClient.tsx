@@ -4,23 +4,22 @@ import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 import { supabase } from "@/lib/supabaseClient";
-import { Streamer } from "@/types/streamer";
+import { YoutubeStreamer } from "@/types/youtube";
 import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
-import { fetchKeywords } from "@/utils/fetchKeywords";
+import { fetchCategories } from "@/utils/fetchCategories";
 
-import { KeywordSelector } from "@/components/streamer/KeywordSelector";
+import { CategorySelector } from "@/components/streamer/CategorySelector";
 import { StreamerCard } from "@/components/streamer/StreamerCard";
 
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function HomeClient() {
   const [isVisible, setIsVisible] = useState(false);
-  const [keywords, setKeywords] = useState<string[]>([]);
-  const [selectedKeywords, setSelectedKeywords] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  // const [selectedGender, setSelectedGender] = useState<string | null>(null);
-  const [results, setResults] = useState<Streamer[]>([]);
+  const [results, setResults] = useState<YoutubeStreamer[]>([]);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -45,90 +44,89 @@ export default function HomeClient() {
     });
   };
 
-  const toggleKeyword = (keyword: string) => {
-    setSelectedKeywords((prev) =>
-      prev.includes(keyword)
-        ? prev.filter((k) => k !== keyword)
-        : [...prev, keyword]
+  const toggleCategory = (category: string) => {
+    setSelectedCategories((prev) =>
+      prev.includes(category)
+        ? prev.filter((c) => c !== category)
+        : [...prev, category]
     );
   };
 
   const fetchStreamers = () => {
     if (!selectedPlatform) return;
-    const query = selectedKeywords.length > 0 ? selectedKeywords.join(",") : null;
+    const query = selectedCategories.length > 0 ? selectedCategories.join(",") : null;
     const platformQuery = `platform=${selectedPlatform}`;
     
     const url = query
-      ? `/?keywords=${query}&${platformQuery}`
+      ? `/?categories=${query}&${platformQuery}`
       : `/?${platformQuery}`;
   
     router.push(url);
   };
 
-  const doFetchStreamers = async (keywords: string[], platform?: string | null) => {
+  const doFetchStreamers = async (categories: string[], platform?: string | null) => {
     setLoading(true);
   
-    let matchedStreamerIds: string[] = [];
-  
-    if (keywords.length === 0) {
-      const { data: allStreamers } = await supabase
-        .from("streamers")
-        .select("id");
-  
-      matchedStreamerIds = (allStreamers ?? []).map((s) => s.id);
-    } else {
-      const { data: keywordMatches } = await supabase
-        .from("keywords")
-        .select("id")
-        .in("name", keywords);
-  
-      const keywordIds = (keywordMatches ?? []).map((k) => k.id);
-  
-      const { data: mappings } = await supabase
-        .from("streamer_keywords")
-        .select("streamer_id")
-        .in("keyword_id", keywordIds);
-  
-      matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
-    }
-  
-    if (matchedStreamerIds.length === 0) {
-      setResults([]);
-      setLoading(false);
-      return;
-    }
-  
-    const { data: finalStreamers } = await supabase
-      .from("streamers")
-      .select(`
-        *,
-        platforms:streamer_platforms(*)
-      `)
-      .in("id", matchedStreamerIds);
-  
-    let filteredResults = finalStreamers || [];
-    if (platform) {
-      filteredResults = filteredResults.filter((streamer) =>
-        streamer.platforms.some((p: { platform: string }) => p.platform === platform)
-      );
-    }
-  
-    setResults(filteredResults);
+    // 플랫폼별 쿼리 구성
+    if (platform === 'youtube') {
+      // 유튜브 스트리머 가져오기 로직
+      let matchedStreamerIds: string[] = [];
+
+      if (categories.length === 0) {
+        // 카테고리 미선택 시 전체 유튜브 스트리머 가져오기
+        const { data: allStreamers } = await supabase
+          .from("youtube_streamers")
+          .select("id");
+    
+        matchedStreamerIds = (allStreamers ?? []).map((s) => s.id);
+      } else {
+        // 카테고리 선택 시 해당 카테고리와 매핑된 스트리머만 가져오기
+        const { data: categoryMatches } = await supabase
+          .from("youtube_game_categories")
+          .select("id")
+          .in("name", categories);
+    
+        const categoryIds = (categoryMatches ?? []).map((k) => k.id);
+    
+        const { data: mappings } = await supabase
+          .from("youtube_streamer_categories")
+          .select("streamer_id")
+          .in("category_id", categoryIds);
+    
+        matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
+      }
+    
+      if (matchedStreamerIds.length === 0) {
+        setResults([]);
+        setLoading(false);
+        return;
+      }
+    
+      // 최종 스트리머 데이터 가져오기
+      const { data: finalStreamers } = await supabase
+        .from("youtube_streamers")
+        .select("*")
+        .in("id", matchedStreamerIds);
+
+      setResults(finalStreamers || []);
+    } 
+    // 향후 다른 플랫폼 추가 시 여기에 else if로 추가
+    
     setLoading(false);
   };
 
   useEffect(() => {
-    const loadKeywords = async () => {
-      const data = await fetchKeywords();
-      setKeywords(data.map((k) => k.name));
+    const loadCategories = async () => {
+      const data = await fetchCategories();
+      setCategories(data.map((c) => c.name));
     };
-    loadKeywords();
+    loadCategories();
   }, []);
 
   useEffect(() => {
-    const keywordsParam = searchParams.get("keywords");
-    const keywordsFromURL = keywordsParam
-      ? keywordsParam.split(",").filter((k) => k.length > 0)
+    const categoriesParam = searchParams.get("categories");
+    const categoriesFromURL = categoriesParam
+      ? categoriesParam.split(",").filter((c) => c.length > 0)
       : [];
     
     const platformFromURL = searchParams.get("platform") || null;
@@ -137,10 +135,10 @@ export default function HomeClient() {
       return;
     }
   
-    setSelectedKeywords(keywordsFromURL);
+    setSelectedCategories(categoriesFromURL);
     setSelectedPlatform(platformFromURL);
   
-    doFetchStreamers(keywordsFromURL, platformFromURL);
+    doFetchStreamers(categoriesFromURL, platformFromURL);
   }, [searchParams]);
   
 
@@ -148,14 +146,12 @@ export default function HomeClient() {
     <main className="p-6 max-w-4xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">🎮 스트리머 추천 받기</h1>
 
-      <KeywordSelector
-        keywords={keywords}
-        selectedKeywords={selectedKeywords}
+      <CategorySelector
+        categories={categories}
+        selectedCategories={selectedCategories}
         selectedPlatform={selectedPlatform}
-        // selectedGender={selectedGender}
-        onToggleKeyword={toggleKeyword}
+        onToggleCategory={toggleCategory}
         onSelectPlatform={setSelectedPlatform}
-        // onSelectGender={setSelectedGender}
       />
 
       {/* 추천 버튼 */}
@@ -182,7 +178,7 @@ export default function HomeClient() {
         {results.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
             {results
-              // .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
+              .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
               .map((s) => (
                 <StreamerCard key={s.id} streamer={s} />
               ))}

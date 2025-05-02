@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import { gameTypeToKeyword } from "../constants/gameKeywords";
+import { gameTypeToKeyword } from "../../constants/gameKeywords";
 
 /**
  * 스트리머-키워드 매핑 스크립트

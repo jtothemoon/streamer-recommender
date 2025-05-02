@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { searchAndSaveStreamers } from "@/scripts/youtube/old/searchAndSaveStreamers";
-import { linkStreamersToKeywords } from "@/scripts/youtube/linkStreamersToKeywords";
+import { linkStreamersToKeywords } from "@/scripts/youtube/old/linkStreamersToKeywords";
 
 export async function GET() {
   try {

@@ -19,6 +19,9 @@ export interface YoutubeGameCategory {
     latest_uploaded_at: string | null;
     created_at: string | null;
     updated_at: string | null;
-    // 스트리머-카테고리 관계를 위한 선택적 속성
-    categories?: YoutubeGameCategory[];
+    
+    // Streamer 타입과의 호환성을 위한 추가 속성
+    platform: string; // "youtube"로 고정
+    gender: string | null; // undefined 불가
+    game_type: string | null; // undefined 불가
   }

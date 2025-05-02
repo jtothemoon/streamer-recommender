@@ -1,14 +1,13 @@
 "use client";
 
-import { Streamer } from "@/types/streamer";
+import { YoutubeStreamer } from "@/types/youtube";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
 import YoutubeIcon from "../icons/YoutubeIcon";
-import TwitchIcon from "../icons/TwitchIcon";
 import FavoriteButton from "../ui/FavoriteButton";
 
-export function StreamerCard({ streamer }: { streamer: Streamer }) {
+export function StreamerCard({ streamer }: { streamer: YoutubeStreamer }) {
   const router = useRouter();
 
   const isNew = (() => {
@@ -54,36 +53,14 @@ export function StreamerCard({ streamer }: { streamer: Streamer }) {
       </h2>
       <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
         <span className="text-lg">👥</span>
-        {streamer.platform === "youtube"
-          ? `${formatSubscribers(streamer.subscribers)} 구독자`
-          : "구독자 수 제공 안됨"}
+        {`${formatSubscribers(streamer.subscribers)} 구독자`}
       </div>
       <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1 truncate">
         {streamer.description || "채널 설명 없음"}
       </p>
       <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
-        {streamer.platforms &&
-          streamer.platforms.map((platform) => (
-            <div key={platform.id} className="flex items-center gap-1">
-              {platform.platform === "youtube" && (
-                <>
-                  <YoutubeIcon />
-                  <span>YOUTUBE</span>
-                </>
-              )}
-              {platform.platform === "twitch" && (
-                <>
-                  <TwitchIcon />
-                  <span>TWITCH</span>
-                </>
-              )}
-            </div>
-          ))}
-        {streamer.gender !== "unknown" && (
-          <>
-            <span className="mx-1 text-gray-300">|</span> 🚻 {streamer.gender}
-          </>
-        )}
+        <YoutubeIcon />
+        <span>YOUTUBE</span>
       </div>
       <a
         href={streamer.channel_url || '#'}

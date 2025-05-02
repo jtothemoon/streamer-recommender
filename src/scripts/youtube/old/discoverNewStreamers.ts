@@ -1,12 +1,12 @@
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import { gameKeywords, gameTypeToKeyword } from "../constants/gameKeywords";
+import { gameKeywords, gameTypeToKeyword } from "../../constants/gameKeywords";
 import {
   searchChannels,
   getChannelDetails,
   isKoreanText,
-} from "./utils/channels";
-import { isGameChannel } from "./utils/video";
+} from "../utils/channels";
+import { isGameChannel } from "../utils/video";
 
 /**
  * 신규 스트리머 발굴 스크립트

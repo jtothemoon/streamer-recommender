@@ -4,10 +4,10 @@ import { useState, useEffect } from 'react';
 import { HeartIcon } from '@heroicons/react/24/outline';
 import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useFavoriteStore } from '@/store/favoriteStore';
-import { Streamer } from '@/types/streamer';
+import { YoutubeStreamer } from '@/types/youtube';
 
 interface FavoriteButtonProps {
-  streamer: Streamer;
+  streamer: YoutubeStreamer;
   className?: string;
 }
 
