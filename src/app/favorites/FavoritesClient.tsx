@@ -3,13 +3,13 @@
 import { useState, useEffect } from "react";
 import { ChevronUpIcon } from "@heroicons/react/24/solid";
 import { useFavoriteStore } from "@/store/favoriteStore";
-import { Streamer } from "@/types/streamer";
+import { YoutubeStreamer } from "@/types/youtube";
 import { StreamerCard } from "@/components/streamer/StreamerCard";
 
 export default function FavoritesClient() {
   const [isVisible, setIsVisible] = useState(false);
   const { getFavorites } = useFavoriteStore();
-  const [favorites, setFavorites] = useState<Streamer[]>([]);
+  const [favorites, setFavorites] = useState<YoutubeStreamer[]>([]);
 
   useEffect(() => {
     const toggleVisibility = () => {
