@@ -3,19 +3,19 @@ import { createClient } from "@supabase/supabase-js";
 import { getChannelDetails } from "./utils/channels";
 
 /**
- * 기존 스트리머 정보 업데이트 스크립트
+ * 유튜브 스트리머 정보 업데이트 스크립트
  *
- * 용도: 이미 DB에 저장된 스트리머 정보를 최신 상태로 업데이트
+ * 용도: 이미 DB에 저장된 유튜브 스트리머 정보를 최신 상태로 업데이트
  * 작동: 구독자 수, 최근 업로드 일자, 프로필 정보 등을 갱신
  *
  * 실행 방법:
- * npx ts-node --project tsconfig.scripts.json src/scripts/youtube/updateExistingStreamers.ts
+ * npx ts-node --project tsconfig.scripts.json src/scripts/youtube/updateYoutubeStreamers.ts
  *
  * 옵션:
  * --limit=N: 처리할 스트리머 수 제한 (예: --limit=20)
- * --game=게임1,게임2: 특정 게임 카테고리만 처리 (예: --game=롤,피파)
+ * --category=카테고리1,카테고리2: 특정 게임 카테고리만 처리 (예: --category=롤,피파)
  */
-export async function updateExistingStreamers() {
+export async function updateYoutubeStreamers() {
   // 환경변수 설정
   dotenv.config();
 
@@ -26,38 +26,38 @@ export async function updateExistingStreamers() {
   // 커맨드라인 인자 파싱
   const args = process.argv.slice(2);
   let limit: number | null = null;
-  let gameTypes: string[] | null = null;
+  let categories: string[] | null = null;
 
   for (const arg of args) {
     if (arg.startsWith("--limit=")) {
       limit = parseInt(arg.split("=")[1], 10);
-    } else if (arg.startsWith("--game=")) {
-      gameTypes = arg.split("=")[1].split(",");
+    } else if (arg.startsWith("--category=")) {
+      categories = arg.split("=")[1].split(",");
     }
   }
 
   // Supabase 업데이트
   const updateStreamer = async (data: {
     id: string;
+    youtube_channel_id: string;
     name: string;
     description: string;
-    profileImage: string;
+    profile_image_url: string;
     subscribers: number;
-    channelUrl: string;
-    gameType: string;
-    latestUploadDate: Date | null;
+    channel_url: string;
+    latest_upload_date: Date | null;
   }) => {
     const now = new Date().toISOString();
 
-    // 1. 메인 streamers 테이블 업데이트
+    // youtube_streamers 테이블 업데이트
     const { error } = await supabase
-      .from("streamers")
+      .from("youtube_streamers")
       .update({
         description: data.description,
-        profile_image_url: data.profileImage,
+        profile_image_url: data.profile_image_url,
         subscribers: data.subscribers,
-        latest_uploaded_at: data.latestUploadDate
-          ? data.latestUploadDate.toISOString()
+        latest_uploaded_at: data.latest_upload_date
+          ? data.latest_upload_date.toISOString()
           : null,
         updated_at: now,
       })
@@ -68,47 +68,54 @@ export async function updateExistingStreamers() {
       return false;
     }
 
-    // 2. streamer_platforms 테이블 업데이트 (upsert)
-    const { error: platformError } = await supabase
-      .from("streamer_platforms")
-      .upsert({
-        streamer_id: data.id,
-        platform: "youtube",
-        platform_id: data.id, // YouTube는 채널 ID가 streamer ID와 동일
-        channel_url: data.channelUrl,
-        profile_image_url: data.profileImage,
-        subscribers: data.subscribers,
-        latest_uploaded_at: data.latestUploadDate
-          ? data.latestUploadDate.toISOString()
-          : null,
-        updated_at: now,
-      }, { onConflict: 'platform,platform_id' });
-
-    if (platformError) {
-      console.error(`❌ 플랫폼 정보 업데이트 실패 (${data.name}):`, platformError);
-      // 메인 스트리머는 업데이트됐으므로 true 반환
-      console.log(`⚠️ 플랫폼 업데이트 실패했으나 스트리머는 업데이트됨: ${data.name}`);
-      return true;
-    }
-
     console.log(`✅ 업데이트 완료: ${data.name} (구독자: ${data.subscribers}명)`);
     return true;
   };
 
   // 메인 실행 함수
   const main = async () => {
-    console.log("🔄 기존 스트리머 정보 업데이트 시작...");
+    console.log("🔄 유튜브 스트리머 정보 업데이트 시작...");
 
-    // 쿼리 구성 (제한 및 필터 적용)
+    // 기본 쿼리 구성
     let query = supabase
-      .from("streamers")
-      .select("*")
-      .eq("platform", "youtube");
+      .from("youtube_streamers")
+      .select("*");
 
-    // 게임 타입 필터 적용
-    if (gameTypes && gameTypes.length > 0) {
-      query = query.in("game_type", gameTypes);
-      console.log(`ℹ️ 게임 필터 적용: ${gameTypes.join(", ")}`);
+    // 특정 카테고리 필터링 (카테고리 지정된 경우)
+    if (categories && categories.length > 0) {
+      console.log(`ℹ️ 카테고리 필터 적용: ${categories.join(", ")}`);
+      
+      // 카테고리 ID 조회
+      const { data: categoryData, error: categoryError } = await supabase
+        .from("youtube_game_categories")
+        .select("id")
+        .in("name", categories);
+        
+      if (categoryError || !categoryData || categoryData.length === 0) {
+        console.error("❌ 카테고리 조회 실패:", categoryError || "카테고리를 찾을 수 없음");
+        return;
+      }
+      
+      const categoryIds = categoryData.map(c => c.id);
+      
+      // 카테고리와 매핑된 스트리머 ID 조회
+      const { data: mappingsData, error: mappingsError } = await supabase
+        .from("youtube_streamer_categories")
+        .select("streamer_id")
+        .in("category_id", categoryIds);
+        
+      if (mappingsError) {
+        console.error("❌ 카테고리 매핑 조회 실패:", mappingsError);
+        return;
+      }
+      
+      if (!mappingsData || mappingsData.length === 0) {
+        console.log("⚠️ 선택한 카테고리에 매핑된 스트리머가 없습니다.");
+        return;
+      }
+      
+      const streamerIds = mappingsData.map(m => m.streamer_id);
+      query = query.in("id", streamerIds);
     }
 
     // 정렬 (업데이트 시간 오래된 순)
@@ -128,6 +135,11 @@ export async function updateExistingStreamers() {
       return;
     }
 
+    if (!streamers || streamers.length === 0) {
+      console.log("⚠️ 업데이트할 스트리머가 없습니다.");
+      return;
+    }
+
     console.log(`ℹ️ 총 ${streamers.length}명 스트리머 업데이트 대상`);
 
     let successCount = 0;
@@ -137,16 +149,8 @@ export async function updateExistingStreamers() {
     for (const streamer of streamers) {
       console.log(`🔄 스트리머 정보 업데이트 중: ${streamer.name}`);
 
-      // YouTube 채널만 처리
-      if (streamer.platform !== "youtube") {
-        console.log(
-          `⏩ YouTube 채널 아님: ${streamer.name} (${streamer.platform})`
-        );
-        continue;
-      }
-
       // 채널 세부 정보 가져오기 (유틸리티 함수 사용)
-      const channelDetails = await getChannelDetails(streamer.id);
+      const channelDetails = await getChannelDetails(streamer.youtube_channel_id);
 
       if (!channelDetails.success) {
         console.log(`⚠️ ${channelDetails.message}: ${streamer.name}`);
@@ -165,13 +169,13 @@ export async function updateExistingStreamers() {
       // 업데이트 수행
       const result = await updateStreamer({
         id: streamer.id,
+        youtube_channel_id: streamer.youtube_channel_id,
         name: streamer.name,
         description: description || streamer.description || "",
-        profileImage: profileImage || streamer.profile_image_url || "",
+        profile_image_url: profileImage || streamer.profile_image_url || "",
         subscribers: subscribers,
-        channelUrl: streamer.channel_url,
-        gameType: streamer.game_type,
-        latestUploadDate: latestUploadDate,
+        channel_url: streamer.channel_url,
+        latest_upload_date: latestUploadDate,
       });
 
       if (result) successCount++;
@@ -181,7 +185,7 @@ export async function updateExistingStreamers() {
     console.log("\n===== 업데이트 결과 =====");
     console.log(`✅ 성공: ${successCount}명`);
     console.log(`❌ 실패: ${failCount}명`);
-    console.log("🎉 기존 스트리머 업데이트 완료!");
+    console.log("🎉 유튜브 스트리머 업데이트 완료!");
   };
 
   // 실행
@@ -190,7 +194,7 @@ export async function updateExistingStreamers() {
 
 // 직접 실행 시
 if (require.main === module) {
-  updateExistingStreamers().catch((err) => {
+  updateYoutubeStreamers().catch((err) => {
     console.error("❌ 스크립트 실행 오류:", err);
     process.exit(1);
   });
