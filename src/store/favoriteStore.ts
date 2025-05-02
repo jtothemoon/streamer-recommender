@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { Streamer } from '@/types/streamer';
+import { YoutubeStreamer } from '@/types/youtube';
 
 interface FavoriteStore {
-  favorites: Record<string, Streamer>;
-  addFavorite: (streamer: Streamer) => void;
+  favorites: Record<string, YoutubeStreamer>;
+  addFavorite: (streamer: YoutubeStreamer) => void;
   removeFavorite: (streamerId: string) => void;
   isFavorite: (streamerId: string) => boolean;
-  getFavorites: () => Streamer[];
+  getFavorites: () => YoutubeStreamer[];
 }
 
 export const useFavoriteStore = create<FavoriteStore>()(
