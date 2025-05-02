@@ -133,7 +133,9 @@ export async function getChannelDetails(channelId: string) {
 
     // 프로필 이미지와 설명
     const snippet = channelItem.snippet || {};
-    const profileImage = snippet.thumbnails?.default?.url || "";
+    const profileImage = snippet.thumbnails?.high?.url || 
+                     snippet.thumbnails?.medium?.url || 
+                     snippet.thumbnails?.default?.url || "";
     const description = snippet.description || "";
 
     // 업로드 플레이리스트 ID
