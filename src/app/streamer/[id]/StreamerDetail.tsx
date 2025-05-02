@@ -140,7 +140,29 @@ export default function StreamerDetail({
   return (
     <main className="p-6 max-w-3xl mx-auto">
       <button
-        onClick={() => router.back()}
+        onClick={() => {
+          // 현재 저장된 값 확인 (먼저 값을 가져옴)
+          const savedPosition = sessionStorage.getItem("homeScrollPosition");
+          console.log("뒤로가기 전 스크롤 값:", savedPosition);
+
+          router.back();
+
+          // 200ms 딜레이로 시도
+          setTimeout(() => {
+            const currentPosition =
+              sessionStorage.getItem("homeScrollPosition");
+            console.log("200ms 후 스크롤 값:", currentPosition);
+
+            // 값이 있고 0보다 크면 스크롤
+            if (savedPosition && parseInt(savedPosition) > 0) {
+              window.scrollTo({
+                top: parseInt(savedPosition),
+                behavior: "smooth", // 부드러운 스크롤 애니메이션 추가
+              });
+              console.log("스크롤 복원 시도:", parseInt(savedPosition));
+            }
+          }, 200);
+        }}
         className="flex items-center gap-1 text-sm mb-4 text-[#00C7AE] hover:text-[#00b19c] transition-colors cursor-pointer"
       >
         <ArrowLeftIcon className="w-5 h-5" />

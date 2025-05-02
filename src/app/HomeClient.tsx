@@ -32,6 +32,17 @@ export default function HomeClient() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
+    const handleScroll = () => {
+      // 디바운스 처리 안 하고 직접 저장
+      sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
+      console.log('스크롤 저장:', window.scrollY);
+    };
+  
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  useEffect(() => {
     const toggleVisibility = () => {
       if (window.scrollY > 300) {
         setIsVisible(true);
