@@ -22,25 +22,40 @@ export default function HomeClient() {
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
-  
+
   // 플랫폼별 결과 상태 분리
   const [youtubeResults, setYoutubeResults] = useState<YoutubeStreamer[]>([]);
   const [twitchResults, setTwitchResults] = useState<TwitchStreamer[]>([]);
-  
+
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
 
   useEffect(() => {
     const handleScroll = () => {
-      // 디바운스 처리 안 하고 직접 저장
+      const skipSave = sessionStorage.getItem('skipNextScrollSave');
+      const alreadySaved = sessionStorage.getItem('homeScrollPosition');
+  
+      if (skipSave === 'true') {
+        console.log('👉 스크롤 저장 스킵 (플래그)');
+        sessionStorage.setItem('skipNextScrollSave', 'false');
+        return;
+      }
+  
+      // 추가: 스크롤 0일 땐 이미 값 있으면 덮어쓰지 않기
+      if (window.scrollY === 0 && alreadySaved && parseInt(alreadySaved) > 0) {
+        console.log('👉 스크롤 0 저장 방지 (이미 값 있음)');
+        return;
+      }
+  
+      console.log('👉 스크롤 저장:', window.scrollY);
       sessionStorage.setItem('homeScrollPosition', window.scrollY.toString());
-      console.log('스크롤 저장:', window.scrollY);
     };
   
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+  
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -72,25 +87,29 @@ export default function HomeClient() {
 
   const fetchStreamers = () => {
     if (!selectedPlatform) return;
-    const query = selectedCategories.length > 0 ? selectedCategories.join(",") : "";
+    const query =
+      selectedCategories.length > 0 ? selectedCategories.join(",") : "";
     const platformQuery = `platform=${selectedPlatform}`;
-    
+
     const url = query
       ? `/?categories=${query}&${platformQuery}`
       : `/?${platformQuery}`;
-  
+
     router.push(url);
   };
 
   // 플랫폼별 데이터 조회 로직
-  const doFetchStreamers = async (categories: string[], platform?: string | null) => {
+  const doFetchStreamers = async (
+    categories: string[],
+    platform?: string | null
+  ) => {
     setLoading(true);
-    
+
     // 결과 초기화
     setYoutubeResults([]);
     setTwitchResults([]);
-  
-    if (platform === 'youtube') {
+
+    if (platform === "youtube") {
       // 유튜브 스트리머 조회
       let matchedStreamerIds: string[] = [];
 
@@ -99,7 +118,7 @@ export default function HomeClient() {
         const { data: allStreamers } = await supabase
           .from("youtube_streamers")
           .select("id");
-    
+
         matchedStreamerIds = (allStreamers ?? []).map((s) => s.id);
       } else {
         // 카테고리 선택 시 해당 카테고리와 매핑된 스트리머만 가져오기
@@ -107,22 +126,22 @@ export default function HomeClient() {
           .from("youtube_game_categories")
           .select("id")
           .in("name", categories);
-    
+
         const categoryIds = (categoryMatches ?? []).map((k) => k.id);
-    
+
         const { data: mappings } = await supabase
           .from("youtube_streamer_categories")
           .select("streamer_id")
           .in("category_id", categoryIds);
-    
+
         matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
       }
-    
+
       if (matchedStreamerIds.length === 0) {
         setLoading(false);
         return;
       }
-    
+
       // 최종 스트리머 데이터 가져오기
       const { data: finalStreamers } = await supabase
         .from("youtube_streamers")
@@ -130,8 +149,7 @@ export default function HomeClient() {
         .in("id", matchedStreamerIds);
 
       setYoutubeResults(finalStreamers || []);
-    } 
-    else if (platform === 'twitch') {
+    } else if (platform === "twitch") {
       // 트위치 스트리머 조회
       let matchedStreamerIds: string[] = [];
 
@@ -140,7 +158,7 @@ export default function HomeClient() {
         const { data: allStreamers } = await supabase
           .from("twitch_streamers")
           .select("id");
-    
+
         matchedStreamerIds = (allStreamers ?? []).map((s) => s.id);
       } else {
         // 카테고리 선택 시 해당 카테고리와 매핑된 스트리머만 가져오기
@@ -148,22 +166,22 @@ export default function HomeClient() {
           .from("twitch_game_categories")
           .select("id")
           .in("name", categories);
-    
+
         const categoryIds = (categoryMatches ?? []).map((k) => k.id);
-    
+
         const { data: mappings } = await supabase
           .from("twitch_streamer_categories")
           .select("streamer_id")
           .in("category_id", categoryIds);
-    
+
         matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
       }
-    
+
       if (matchedStreamerIds.length === 0) {
         setLoading(false);
         return;
       }
-    
+
       // 최종 스트리머 데이터 가져오기
       const { data: finalStreamers } = await supabase
         .from("twitch_streamers")
@@ -172,23 +190,22 @@ export default function HomeClient() {
 
       setTwitchResults(finalStreamers || []);
     }
-    
+
     setLoading(false);
   };
 
   // 플랫폼에 따라 카테고리 로드
   useEffect(() => {
     const loadCategories = async () => {
-      if (selectedPlatform === 'youtube') {
+      if (selectedPlatform === "youtube") {
         const data = await fetchYoutubeCategories();
         setCategories(data.map((c) => c.name));
-      } 
-      else if (selectedPlatform === 'twitch') {
+      } else if (selectedPlatform === "twitch") {
         const data = await fetchTwitchCategories();
         setCategories(data.map((c) => c.name));
       }
     };
-    
+
     if (selectedPlatform) {
       loadCategories();
     }
@@ -200,22 +217,26 @@ export default function HomeClient() {
     const categoriesFromURL = categoriesParam
       ? categoriesParam.split(",").filter((c) => c.length > 0)
       : [];
-    
+
     const platformFromURL = searchParams.get("platform") || null;
-  
+
     if (!platformFromURL) {
       return;
     }
-  
+
     setSelectedCategories(categoriesFromURL);
     setSelectedPlatform(platformFromURL);
-  
+
     doFetchStreamers(categoriesFromURL, platformFromURL);
   }, [searchParams]);
-  
+
   // 현재 플랫폼에 따른 결과
-  const results = selectedPlatform === 'youtube' ? youtubeResults : 
-                 selectedPlatform === 'twitch' ? twitchResults : [];
+  const results =
+    selectedPlatform === "youtube"
+      ? youtubeResults
+      : selectedPlatform === "twitch"
+      ? twitchResults
+      : [];
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
@@ -252,17 +273,15 @@ export default function HomeClient() {
       <section className="mt-10">
         {results.length > 0 && (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {selectedPlatform === 'youtube' && youtubeResults
-              .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
-              .map((s) => (
-                <YoutubeStreamerCard key={s.id} streamer={s} />
-              ))}
-              
-            {selectedPlatform === 'twitch' && twitchResults
-              .sort((a, b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0))
-              .map((s) => (
-                <TwitchStreamerCard key={s.id} streamer={s} />
-              ))}
+            {selectedPlatform === "youtube" &&
+              youtubeResults
+                .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
+                .map((s) => <YoutubeStreamerCard key={s.id} streamer={s} />)}
+
+            {selectedPlatform === "twitch" &&
+              twitchResults
+                .sort((a, b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0))
+                .map((s) => <TwitchStreamerCard key={s.id} streamer={s} />)}
           </div>
         )}
 
@@ -272,7 +291,7 @@ export default function HomeClient() {
           </p>
         )}
       </section>
-      
+
       {isVisible && (
         <button
           onClick={scrollToTop}
