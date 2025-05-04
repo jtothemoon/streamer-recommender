@@ -2,17 +2,17 @@ name: Twitch Refresh Every Hour
 
 on:
   schedule:
-    - cron: '0 * * * *' # 매시간 0분마다 실행
-  workflow_dispatch: # 수동 실행 버튼도 허용
+    - cron: '0 * * * *'
+  workflow_dispatch:
 
 jobs:
   refresh-twitch:
     runs-on: ubuntu-latest
     env:
-    NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-    NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-    TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
-    TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      TWITCH_CLIENT_ID: ${{ secrets.TWITCH_CLIENT_ID }}
+      TWITCH_CLIENT_SECRET: ${{ secrets.TWITCH_CLIENT_SECRET }}
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-node@v4
