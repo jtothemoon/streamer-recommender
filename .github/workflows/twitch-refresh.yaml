@@ -1,6 +1,9 @@
 name: Twitch Refresh Every Hour
 
 on:
+  push:
+    branches:
+      - main
   schedule:
     - cron: '*/5 * * * *'
   workflow_dispatch:
