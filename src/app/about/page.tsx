@@ -7,12 +7,13 @@ import {
   CursorArrowRaysIcon,
   PlayIcon,
   WrenchScrewdriverIcon,
+  ChatBubbleOvalLeftEllipsisIcon,
 } from "@heroicons/react/24/outline";
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Spick - 게임 스트리머 추천 서비스 소개 | 당신에게 맞는 스트리머 찾기",
-  description: "Spick은 게임 취향에 맞는 유튜브, 트위치 등의 스트리머를 쉽고 빠르게 추천해주는 플랫폼입니다. 다양한 게임 장르와 키워드로 나에게 맞는 스트리머를 발견해보세요.",
+  description: "Spick은 게임 취향에 맞는 유튜브, 트위치, 치지직 등의 스트리머를 쉽고 빠르게 추천해주는 플랫폼입니다. 다양한 게임 장르와 키워드로 나에게 맞는 스트리머를 발견해보세요.",
 };
 
 export default function AboutPage() {
@@ -24,8 +25,8 @@ export default function AboutPage() {
     },
     {
       icon: <PlayIcon className="w-8 h-8 text-[#00C7AE] mb-2" />,
-      title: "유튜브 스트리머 지원",
-      description: "현재 YouTube 스트리머를 지원하며, 곧 트위치와 SOOP 스트리머도 만나보실 수 있습니다."
+      title: "멀티 플랫폼 지원",
+      description: "YouTube, Twitch, 치지직 등 다양한 플랫폼의 스트리머를 지원합니다."
     },
     {
       icon: <ClockIcon className="w-8 h-8 text-[#00C7AE] mb-2" />,
@@ -36,13 +37,13 @@ export default function AboutPage() {
 
   const platforms = [
     { icon: <PlayIcon className="w-8 h-8 text-[#FF0000]" />, name: "YouTube", color: "text-[#FF0000]", status: "제공 중" },
-    { icon: <WrenchScrewdriverIcon className="w-8 h-8 text-[#6441a5]" />, name: "Twitch", color: "text-[#9146FF]", status: "준비 중" },
+    { icon: <WrenchScrewdriverIcon className="w-8 h-8 text-[#9146FF]" />, name: "Twitch", color: "text-[#9146FF]", status: "제공 중" },
+    { icon: <ChatBubbleOvalLeftEllipsisIcon className="w-8 h-8 text-[#03C75A]" />, name: "Chzzk", color: "text-[#03C75A]", status: "준비 중" },
     { icon: <EnvelopeIcon className="w-8 h-8 text-[#0545b1]" />, name: "SOOP", color: "text-[#1269FF]", status: "API 요청 중" }
   ];
 
   return (
     <div className="py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
-      {/* 헤더 섹션 */}
       <div className="text-center mb-16">
         <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-4">
           <span className="text-[#00C7AE]">Spick</span> 소개
@@ -52,7 +53,6 @@ export default function AboutPage() {
         </p>
       </div>
 
-      {/* 서비스 소개 카드 */}
       <section className="mb-16 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 flex items-center">
           <HomeIcon className="w-6 h-6 mr-2 text-[#00C7AE]" /> 서비스 소개
@@ -67,7 +67,6 @@ export default function AboutPage() {
           </p>
         </div>
 
-        {/* 특징 */}
         <div className="grid md:grid-cols-3 gap-8 mt-8">
           {features.map((feature, index) => (
             <div key={index} className="flex flex-col items-center text-center">
@@ -79,7 +78,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 지원 플랫폼 */}
       <section className="mb-16 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">지원 플랫폼</h2>
         <div className="flex flex-wrap justify-center gap-8">
@@ -95,13 +93,11 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 로드맵 */}
       <section className="mb-16 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">앞으로의 계획</h2>
         <ul className="space-y-4">
           {[
             "즐겨찾기 기능 추가",
-            "스트리머 평점 시스템 도입",
             "다중 키워드 매칭 추천 알고리즘 고도화",
             "플랫폼/성별/구독자 수 기반 필터링 기능",
             "더 많은 게임 장르 지원"
@@ -114,7 +110,6 @@ export default function AboutPage() {
         </ul>
       </section>
 
-      {/* 개발자 소개 */}
       <section className="mb-16 bg-white dark:bg-gray-800 rounded-2xl p-6 shadow-md">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">개발자 소개</h2>
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -136,7 +131,6 @@ export default function AboutPage() {
         </div>
       </section>
 
-      {/* 홈으로 돌아가기 */}
       <div className="text-center">
         <Link
           href="/"
