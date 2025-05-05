@@ -17,6 +17,7 @@ export interface YoutubeGameCategory {
     channel_url: string | null;
     subscribers: number | null;
     latest_uploaded_at: string | null;
+    featured_video_id: string | null;
     created_at: string | null;
     updated_at: string | null;
     

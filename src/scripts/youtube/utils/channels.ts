@@ -175,7 +175,8 @@ export async function getChannelDetails(channelId: string) {
         latestUploadDate,
         profileImage,
         description,
-        videoId
+        videoId,
+        featured_video_id: videoId
       }
     };
   } catch (err) {

@@ -56,6 +56,7 @@ export async function discoverYoutubeStreamers() {
     channel_url: string;
     game_type: string;
     latest_upload_date: Date | null;
+    featured_video_id: string | null;
   }) => {
     const now = new Date().toISOString();
 
@@ -72,6 +73,7 @@ export async function discoverYoutubeStreamers() {
         latest_uploaded_at: data.latest_upload_date
           ? data.latest_upload_date.toISOString()
           : null,
+        featured_video_id: data.featured_video_id,
         created_at: now,
         updated_at: now,
       })
@@ -304,6 +306,7 @@ export async function discoverYoutubeStreamers() {
             channel_url: `https://www.youtube.com/channel/${channelId}`,
             game_type: gameType,
             latest_upload_date: latestUploadDate,
+            featured_video_id: channelDetails.data.featured_video_id || channelDetails.data.videoId || null,
           });
 
           if (insertedStreamer) {

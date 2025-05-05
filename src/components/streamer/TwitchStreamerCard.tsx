@@ -19,15 +19,6 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
   const streamStatus = status?.[streamer.twitch_id];
   const isLive = streamStatus?.isLive || false;
 
-  const isNew = (() => {
-    if (!streamer.created_at) return false;
-    const createdDate = new Date(streamer.created_at);
-    const now = new Date();
-    const diff = now.getTime() - createdDate.getTime();
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
-    return diff < sevenDays;
-  })();
-
   function formatViewers(count?: number | null) {
     if (!count) return "정보 없음";
     if (count >= 10000) return `${(count / 10000).toFixed(1)}만명`;
@@ -35,24 +26,13 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
     return `${count}명`;
   }
 
-  // 시청자 수 - 라이브 중이면 실시간 데이터 사용
-  const viewerCount = isLive
-    ? streamStatus?.viewerCount
-    : streamer.viewer_count;
-
   return (
     <div
       onClick={() => router.push(`/streamer/${streamer.id}?platform=twitch`)}
       className={`p-4 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[var(--primary)] relative bg-[var(--background-soft)] cursor-pointer`}
     >
-      {isNew && (
-        <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
-          N
-        </div>
-      )}
-
       {isLive && (
-        <div className="absolute top-2 left-2 ml-8 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse flex items-center gap-1">
+        <div className="absolute top-2 left-2 bg-red-600 text-white text-xs font-bold px-2 py-1 rounded animate-pulse flex items-center gap-1 z-10">
           <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse"></span>
           <span>
             LIVE{" "}
@@ -61,27 +41,26 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
           </span>
         </div>
       )}
+      {isLive && streamStatus?.thumbnailUrl && (
+        <div className="mt-3 mb-2 relative overflow-hidden rounded-lg w-full h-32">
+          <Image
+            src={streamStatus.thumbnailUrl
+              .replace("{width}", "320")
+              .replace("{height}", "180")}
+            alt="라이브 방송 썸네일"
+            fill
+            className="object-cover"
+          />
+        </div>
+      )}
 
-      <div className="absolute top-2 right-2">
+      <div className="absolute bottom-4 right-4">
         <FavoriteButton streamer={{ ...streamer, platform: "twitch" }} />
       </div>
-
-      <Image
-        src={streamer.profile_image_url || "/placeholder.jpg"}
-        alt={streamer.display_name}
-        width={80}
-        height={80}
-        className="rounded-full mx-auto mb-3 object-cover border border-[var(--twitch)]"
-      />
 
       <h2 className="text-lg font-semibold text-center truncate">
         {streamer.display_name}
       </h2>
-
-      <div className="mt-2 text-sm text-[var(--foreground-soft)] text-center flex items-center justify-center gap-1">
-        <span className="text-lg">👀</span>
-        {`${formatViewers(viewerCount)} 시청자`}
-      </div>
 
       {/* 라이브 중일 때 게임명과 제목 표시 */}
       {isLive && streamStatus?.gameName && (

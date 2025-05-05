@@ -260,7 +260,26 @@ export default function StreamerDetail({
               ).toLocaleDateString()}
             </p>
           )}
-
+        {/* 유튜브 대표 영상 */}
+        {platform === "youtube" &&
+          (streamer as YoutubeStreamer).featured_video_id && (
+            <div className="mt-8">
+              <h2 className="text-xl font-semibold mb-3 text-center">
+                📺 대표 영상
+              </h2>
+              <div className="relative w-full pt-[56.25%]">
+                <iframe
+                  src={`https://www.youtube.com/embed/${
+                    (streamer as YoutubeStreamer).featured_video_id
+                  }`}
+                  className="absolute top-0 left-0 w-full h-full rounded-lg"
+                  allowFullScreen
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  title="YouTube 동영상"
+                ></iframe>
+              </div>
+            </div>
+          )}
         <a
           href={streamer.channel_url || "#"}
           target="_blank"
