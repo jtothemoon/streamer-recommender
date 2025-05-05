@@ -53,7 +53,7 @@ export default function AboutPage() {
         </p>
       </div>
 
-      <section className="mb-16 bg-[var(--background-soft)] rounded-2xl p-6 shadow-md">
+      <section className="mb-16 bg-[var(--background-soft)] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
         <h2 className="text-2xl font-bold text-[var(--foreground-strong)] mb-6 flex items-center">
           <HomeIcon className="w-6 h-6 mr-2 text-[#00C7AE]" /> 서비스 소개
         </h2>
@@ -78,7 +78,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="mb-16 bg-[var(--background-soft)] rounded-2xl p-6 shadow-md">
+      <section className="mb-16 bg-[var(--background-soft)] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
         <h2 className="text-2xl font-bold text-[var(--foreground-strong)] mb-6">지원 플랫폼</h2>
         <div className="flex flex-wrap justify-center gap-8">
           {platforms.map((platform, index) => (
@@ -93,7 +93,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <section className="mb-16 bg-[var(--background-soft)] rounded-2xl p-6 shadow-md">
+      <section className="mb-16 bg-[var(--background-soft)] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
         <h2 className="text-2xl font-bold text-[var(--foreground-strong)] mb-6">앞으로의 계획</h2>
         <ul className="space-y-4">
           {[
@@ -110,7 +110,7 @@ export default function AboutPage() {
         </ul>
       </section>
 
-      <section className="mb-16 bg-[var(--background-soft)] rounded-2xl p-6 shadow-md">
+      <section className="mb-16 bg-[var(--background-soft)] rounded-2xl p-6 shadow-[0_4px_20px_rgba(0,0,0,0.1)]">
         <h2 className="text-2xl font-bold text-[var(--foreground-strong)] mb-6">개발자 소개</h2>
         <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
           <div className="w-24 h-24 bg-gradient-to-r from-[#00C7AE] to-[#5f8de3] rounded-full flex items-center justify-center text-white text-2xl font-bold">

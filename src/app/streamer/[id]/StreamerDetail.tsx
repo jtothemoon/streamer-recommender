@@ -198,7 +198,7 @@ export default function StreamerDetail({
             {categories.map((category) => (
               <span
                 key={category.id}
-                className="px-3 py-1 bg-[var(--background-soft)] rounded-full text-sm"
+                className="px-3 py-1 bg-[var(--background-soft-hover)] rounded-full text-sm shadow"
               >
                 {category.display_name || category.name}
               </span>

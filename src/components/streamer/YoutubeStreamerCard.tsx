@@ -32,7 +32,7 @@ export function YoutubeStreamerCard({ streamer }: { streamer: YoutubeStreamer })
   return (
     <div
       onClick={() => router.push(`/streamer/${streamer.id}?platform=youtube`)}
-      className={`p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[var(--primary)] relative bg-[var(--background-soft)] cursor-pointer`}
+      className={`p-4 rounded-xl shadow-[0_4px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)] transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[var(--primary)] relative bg-[var(--background-soft)] cursor-pointer`}
     >
       {isNew && (
         <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
