@@ -23,6 +23,13 @@ export interface YouTubeChannel {
       uploads?: string;
     };
   };
+  brandingSettings?: {
+    channel?: {
+      unsubscribedTrailer?: string;
+      description?: string;
+      title?: string;
+    };
+  };
 }
 
 // 검색 결과 채널 타입 정의
@@ -104,8 +111,11 @@ export async function getLatestVideos(playlistId: string, maxResults: number = 1
 // 채널 세부 정보 가져오기 (중복 API 호출 방지)
 export async function getChannelDetails(channelId: string) {
   try {
-    // 한 번의 API 호출로 여러 정보를 함께 가져옴
-    const channelData = await getChannelsInfo([channelId]);
+    // 채널 정보와 브랜딩 설정을 함께 가져오기 위해 part 파라미터 수정
+    const channelData = await callYoutubeApi<YouTubeApiResponse<YouTubeChannel>>('/channels', {
+      part: 'contentDetails,statistics,snippet,brandingSettings',
+      id: channelId
+    });
 
     if (!channelData.items?.length) {
       return { success: false, message: "채널 정보 없음" };
@@ -144,6 +154,9 @@ export async function getChannelDetails(channelId: string) {
       return { success: false, message: "업로드 플레이리스트 정보 없음" };
     }
 
+    // 대표 영상 ID (채널 트레일러) 가져오기
+    const featuredVideoId = channelItem.brandingSettings?.channel?.unsubscribedTrailer || null;
+
     // 최신 동영상 정보 가져오기
     const playlistData = await getLatestVideos(uploadsPlaylistId);
 
@@ -152,7 +165,7 @@ export async function getChannelDetails(channelId: string) {
     }
 
     const latestVideo = playlistData.items[0];
-    const videoId = latestVideo.contentDetails?.videoId;
+    const videoId = latestVideo.contentDetails?.videoId || latestVideo.snippet?.resourceId?.videoId;
     const publishedAt = latestVideo.snippet?.publishedAt;
 
     if (!publishedAt) {
@@ -176,7 +189,7 @@ export async function getChannelDetails(channelId: string) {
         profileImage,
         description,
         videoId,
-        featured_video_id: videoId
+        featured_video_id: featuredVideoId || videoId  // 대표 영상 ID (없으면 최신 영상으로 대체)
       }
     };
   } catch (err) {
