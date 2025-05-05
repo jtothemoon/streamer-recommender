@@ -27,12 +27,21 @@ Props) {
           🖥️ 플랫폼 선택 <span className="text-red-500 text-sm ml-1">*</span>
         </h2>
         <div className="flex flex-wrap gap-2">
-          {["twitch", "youtube"].map((platform) => {
+          {["twitch", "youtube"
+          // , "chzzk"
+        ].map((platform) => {
             const isSelected = selectedPlatform === platform;
-            const selectedColor =
-              platform === "twitch"
-                ? "bg-[#9146FF] text-white border-[#9146FF]"
-                : "bg-[#FF0000] text-white border-[#FF0000]";
+            let selectedColor = "bg-[#00C7AE] text-white border-[#00C7AE]";
+
+            // 플랫폼별 색상 지정
+            if (platform === "twitch") {
+              selectedColor = "bg-[#9146FF] text-white border-[#9146FF]";
+            } else if (platform === "youtube") {
+              selectedColor = "bg-[#FF0000] text-white border-[#FF0000]";
+            } else if (platform === "chzzk") {
+              selectedColor = "bg-[#00FFA3] text-white border-[#00FFA3]";
+            }
+
             const unselectedColor =
               "bg-transparent text-gray-600 dark:text-gray-300 border-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700";
 

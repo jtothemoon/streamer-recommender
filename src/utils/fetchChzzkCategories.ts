@@ -1,0 +1,21 @@
+import { supabase } from "@/lib/supabaseClient";
+import { ChzzkGameCategory } from "@/types/chzzk";
+
+/**
+ * 치지직 게임 카테고리 목록을 가져오는 함수
+ * 
+ * @returns 게임 카테고리 배열
+ */
+export async function fetchChzzkCategories(): Promise<ChzzkGameCategory[]> {
+  const { data, error } = await supabase
+    .from("chzzk_game_categories")
+    .select("*")
+    .order("sort_order", { ascending: true });
+
+  if (error) {
+    console.error("치지직 게임 카테고리 가져오기 실패:", error);
+    return [];
+  }
+
+  return data || [];
+}

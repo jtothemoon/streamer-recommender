@@ -8,9 +8,11 @@ import { supabase } from "@/lib/supabaseClient";
 import { ArrowLeftIcon } from "@heroicons/react/24/solid";
 import YoutubeIcon from "@/components/icons/YoutubeIcon";
 import TwitchIcon from "@/components/icons/TwitchIcon";
+import ChzzkIcon from "@/components/icons/ChzzkIcon";
 
 import { YoutubeStreamer, YoutubeGameCategory } from "@/types/youtube";
 import { TwitchStreamer, TwitchGameCategory } from "@/types/twitch";
+import { ChzzkStreamer, ChzzkGameCategory } from "@/types/chzzk";
 
 type SimpleCategory = {
   id: string;
@@ -19,17 +21,20 @@ type SimpleCategory = {
 };
 
 // 공통 카테고리 타입
-type CategoryInfo = YoutubeGameCategory | TwitchGameCategory;
+type CategoryInfo =
+  | YoutubeGameCategory
+  | TwitchGameCategory
+  | ChzzkGameCategory;
 
 // 유니언 스트리머 타입
-type FavoriteStreamer = YoutubeStreamer | TwitchStreamer;
+type FavoriteStreamer = YoutubeStreamer | TwitchStreamer | ChzzkStreamer;
 
 export default function StreamerDetail({
   id,
   platform,
 }: {
   id: string;
-  platform: "youtube" | "twitch";
+  platform: "youtube" | "twitch" | "chzzk";
 }) {
   const router = useRouter();
   const [streamer, setStreamer] = useState<FavoriteStreamer | null>(null);
@@ -52,6 +57,15 @@ export default function StreamerDetail({
       } else if (platform === "twitch") {
         const { data, error } = await supabase
           .from("twitch_streamers")
+          .select("*")
+          .eq("id", id)
+          .single();
+        streamerData = data;
+        streamerError = error;
+      } else if (platform === "chzzk") {
+        // 치지직 스트리머 데이터 가져오기 추가
+        const { data, error } = await supabase
+          .from("chzzk_streamers")
           .select("*")
           .eq("id", id)
           .single();
@@ -88,6 +102,13 @@ export default function StreamerDetail({
             .select("category_id")
             .eq("streamer_id", id);
           categoryLinks = data;
+        } else if (platform === "chzzk") {
+          // 치지직 카테고리 링크 가져오기 추가
+          const { data } = await supabase
+            .from("chzzk_streamer_categories")
+            .select("category_id")
+            .eq("streamer_id", id);
+          categoryLinks = data;
         }
 
         if (categoryLinks && categoryLinks.length > 0) {
@@ -103,6 +124,13 @@ export default function StreamerDetail({
           } else if (platform === "twitch") {
             const { data } = await supabase
               .from("twitch_game_categories")
+              .select("id, name, display_name")
+              .in("id", categoryIds);
+            categoryData = data;
+          } else if (platform === "chzzk") {
+            // 치지직 카테고리 데이터 가져오기 추가
+            const { data } = await supabase
+              .from("chzzk_game_categories")
               .select("id, name, display_name")
               .in("id", categoryIds);
             categoryData = data;
@@ -204,6 +232,7 @@ export default function StreamerDetail({
           <div className="flex items-center gap-1">
             {platform === "youtube" && <YoutubeIcon />}
             {platform === "twitch" && <TwitchIcon />}
+            {platform === "chzzk" && <ChzzkIcon />}
             <span>{platform.toUpperCase()}</span>
           </div>
 
@@ -219,6 +248,16 @@ export default function StreamerDetail({
             )}
 
             {platform === "twitch" && "viewer_count" in streamer && (
+              <>
+                👀{" "}
+                {streamer.viewer_count !== null &&
+                streamer.viewer_count !== undefined
+                  ? `${streamer.viewer_count.toLocaleString()}명 시청 중`
+                  : "시청자 수 제공 안됨"}
+              </>
+            )}
+
+            {platform === "chzzk" && "viewer_count" in streamer && (
               <>
                 👀{" "}
                 {streamer.viewer_count !== null &&

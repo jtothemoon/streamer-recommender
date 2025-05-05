@@ -2,9 +2,10 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { YoutubeStreamer } from '@/types/youtube';
 import { TwitchStreamer } from '@/types/twitch';
+import { ChzzkStreamer } from '@/types/chzzk';
 
 // 통합 FavoriteStreamer 타입
-type FavoriteStreamer = YoutubeStreamer | TwitchStreamer;
+type FavoriteStreamer = YoutubeStreamer | TwitchStreamer | ChzzkStreamer;
 
 interface FavoriteStore {
   favorites: Record<string, FavoriteStreamer>;

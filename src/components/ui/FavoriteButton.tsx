@@ -6,9 +6,10 @@ import { HeartIcon as HeartSolidIcon } from '@heroicons/react/24/solid';
 import { useFavoriteStore } from '@/store/favoriteStore';
 import { YoutubeStreamer } from '@/types/youtube';
 import { TwitchStreamer } from '@/types/twitch';
+import { ChzzkStreamer } from '@/types/chzzk';
 
 // FavoriteStreamer 타입
-type FavoriteStreamer = YoutubeStreamer | TwitchStreamer;
+type FavoriteStreamer = YoutubeStreamer | TwitchStreamer | ChzzkStreamer;
 
 interface FavoriteButtonProps {
   streamer: FavoriteStreamer;
