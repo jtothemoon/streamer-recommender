@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
@@ -37,6 +37,9 @@ export default function HomeClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // 컴포넌트 마운트 시 ref 초기화
+  const scrollTimeout = useRef<NodeJS.Timeout | null>(null);
+
   // 초기 로딩 처리
   useEffect(() => {
     // 페이지 로드 시 초기 로딩 상태 설정
@@ -50,30 +53,55 @@ export default function HomeClient() {
     return () => clearTimeout(timer);
   }, []);
 
+  // 스크롤 이벤트 핸들러 - 간단하게 유지
   useEffect(() => {
     const handleScroll = () => {
-      const skipSave = sessionStorage.getItem("skipNextScrollSave");
-      const alreadySaved = sessionStorage.getItem("homeScrollPosition");
-
-      if (skipSave === "true") {
-        console.log("👉 스크롤 저장 스킵 (플래그)");
-        sessionStorage.setItem("skipNextScrollSave", "false");
-        return;
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
       }
 
-      // 추가: 스크롤 0일 땐 이미 값 있으면 덮어쓰지 않기
-      if (window.scrollY === 0 && alreadySaved && parseInt(alreadySaved) > 0) {
-        console.log("👉 스크롤 0 저장 방지 (이미 값 있음)");
-        return;
-      }
-
-      console.log("👉 스크롤 저장:", window.scrollY);
-      sessionStorage.setItem("homeScrollPosition", window.scrollY.toString());
+      scrollTimeout.current = setTimeout(() => {
+        // 현재 스크롤 위치 저장
+        const currentPosition = window.scrollY;
+        if (currentPosition > 10) {
+          sessionStorage.setItem(
+            "homeScrollPosition",
+            currentPosition.toString()
+          );
+          console.log("🔵 스크롤 위치 저장:", currentPosition);
+        }
+      }, 100);
     };
 
     window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
+
+    return () => {
+      if (scrollTimeout.current) {
+        clearTimeout(scrollTimeout.current);
+      }
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
+
+  // 페이지 로드 시 스크롤 복원 - 로딩 완료 후 실행
+  useEffect(() => {
+    if (!initialLoading) {
+      const savedPosition = sessionStorage.getItem("homeScrollPosition");
+
+      if (savedPosition && parseInt(savedPosition) > 0) {
+        const position = parseInt(savedPosition);
+        console.log("🔵 스크롤 복원 시도:", position);
+
+        // 약간의 지연 추가
+        setTimeout(() => {
+          window.scrollTo({
+            top: position,
+            behavior: "smooth",
+          });
+        }, 100);
+      }
+    }
+  }, [initialLoading]);
 
   useEffect(() => {
     const toggleVisibility = () => {
@@ -257,9 +285,9 @@ export default function HomeClient() {
   useEffect(() => {
     const loadCategories = async () => {
       if (!selectedPlatform) return;
-      
+
       setCategoriesLoading(true); // 로딩 시작
-      
+
       if (selectedPlatform === "youtube") {
         const data = await fetchYoutubeCategories();
         setCategories(data.map((c) => c.name));
@@ -271,10 +299,10 @@ export default function HomeClient() {
         const data = await fetchChzzkCategories();
         setCategories(data.map((c) => c.name));
       }
-      
+
       setCategoriesLoading(false); // 로딩 완료
     };
-  
+
     if (selectedPlatform) {
       loadCategories();
     }

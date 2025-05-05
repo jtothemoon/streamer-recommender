@@ -169,27 +169,9 @@ export default function StreamerDetail({
     <main className="p-6 max-w-3xl mx-auto">
       <button
         onClick={() => {
-          // ❌ 상세 페이지에서 scrollY 가져오는 게 아니라
-          // ✅ sessionStorage에서 homeScrollPosition 읽어오기
-          const savedPosition = sessionStorage.getItem("homeScrollPosition");
-          console.log("👉 가져온 홈 스크롤 값:", savedPosition);
-
-          sessionStorage.setItem("skipNextScrollSave", "true");
-
+          // 세션 스토리지를 검사하지 않고 back() 호출만 수행
+          console.log("🔵 뒤로가기 호출");
           router.back();
-
-          setTimeout(() => {
-            const position = sessionStorage.getItem("homeScrollPosition");
-            console.log("200ms 후 스크롤 값:", position);
-
-            if (position && parseInt(position) > 0) {
-              window.scrollTo({
-                top: parseInt(position),
-                behavior: "smooth",
-              });
-              console.log("스크롤 복원 시도:", parseInt(position));
-            }
-          }, 200);
         }}
         className="flex items-center gap-1 text-sm mb-4 text-[#00C7AE] hover:text-[#00b19c] transition-colors cursor-pointer"
       >
