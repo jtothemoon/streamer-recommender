@@ -43,7 +43,7 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
   return (
     <div
       onClick={() => router.push(`/streamer/${streamer.id}?platform=twitch`)}
-      className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[#00C7AE] relative bg-white dark:bg-[#1a1a1a] cursor-pointer"
+      className="p-4 rounded-xl shadow transition-transform transform hover:scale-[1.02] hover:ring-2 hover:ring-[var(--primary)] relative bg-[var(--background-soft)] cursor-pointer"
     >
       {isNew && (
         <div className="absolute top-2 left-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded animate-pulse">
@@ -71,21 +71,21 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
         alt={streamer.display_name}
         width={80}
         height={80}
-        className="rounded-full mx-auto mb-3 object-cover border border-[#9146FF]"
+        className="rounded-full mx-auto mb-3 object-cover border border-[var(--twitch)]"
       />
 
       <h2 className="text-lg font-semibold text-center truncate">
         {streamer.display_name}
       </h2>
 
-      <div className="mt-2 text-sm text-gray-500 dark:text-gray-300 text-center flex items-center justify-center gap-1">
+      <div className="mt-2 text-sm text-[var(--foreground-soft)] text-center flex items-center justify-center gap-1">
         <span className="text-lg">👀</span>
         {`${formatViewers(viewerCount)} 시청자`}
       </div>
 
       {/* 라이브 중일 때 게임명과 제목 표시 */}
       {isLive && streamStatus?.gameName && (
-        <div className="mt-2 text-xs text-gray-500 dark:text-gray-300 text-center">
+        <div className="mt-2 text-xs text-[var(--foreground-soft)] text-center">
           <p className="font-bold">{streamStatus.gameName}</p>
           {streamStatus.title && (
             <p className="truncate">{streamStatus.title}</p>
@@ -93,11 +93,11 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
         </div>
       )}
 
-      <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-1 truncate">
+      <p className="text-xs text-[var(--foreground-soft)] text-center mt-1 truncate">
         {streamer.description || "채널 설명 없음"}
       </p>
 
-      <div className="flex items-center justify-center gap-1 text-xs text-gray-400 dark:text-gray-500 mt-1">
+      <div className="flex items-center justify-center gap-1 text-xs text-[var(--foreground-soft)] mt-1">
         <TwitchIcon />
         <span>TWITCH</span>
       </div>
@@ -107,7 +107,7 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
         target="_blank"
         rel="noreferrer"
         onClick={(e) => e.stopPropagation()}
-        className="inline-block mt-3 text-[#00C7AE] text-xs font-bold hover:text-[#00b19c] transition-colors"
+        className="inline-block mt-3 text-[var(--primary)] text-xs font-bold hover:text-[var(--primary-hover)] transition-colors"
       >
         🔗 채널 방문
       </a>

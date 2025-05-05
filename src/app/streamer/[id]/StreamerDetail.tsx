@@ -166,14 +166,14 @@ export default function StreamerDetail({
     );
 
   return (
-    <main className="p-6 max-w-3xl mx-auto">
+    <main className="p-6 max-w-3xl mx-auto bg-[var(--background)] text-[var(--foreground)]">
       <button
         onClick={() => {
           // 세션 스토리지를 검사하지 않고 back() 호출만 수행
           console.log("🔵 뒤로가기 호출");
           router.back();
         }}
-        className="flex items-center gap-1 text-sm mb-4 text-[#00C7AE] hover:text-[#00b19c] transition-colors cursor-pointer"
+        className="flex items-center gap-1 text-sm mb-4 text-[var(--primary)] hover:text-[var(--primary-hover)] transition-colors cursor-pointer"
       >
         <ArrowLeftIcon className="w-5 h-5" />
         <span>뒤로가기</span>
@@ -187,7 +187,7 @@ export default function StreamerDetail({
           }
           width={120}
           height={120}
-          className="w-[120px] h-[120px] rounded-full mx-auto mb-4 object-cover border border-[#00C7AE]"
+          className="w-[120px] h-[120px] rounded-full mx-auto mb-4 object-cover border border-[var(--primary)]"
         />
         <h1 className="text-2xl font-bold">
           {"display_name" in streamer ? streamer.display_name : streamer.name}
@@ -198,7 +198,7 @@ export default function StreamerDetail({
             {categories.map((category) => (
               <span
                 key={category.id}
-                className="px-3 py-1 bg-gray-200 dark:bg-gray-800 rounded-full text-sm"
+                className="px-3 py-1 bg-[var(--background-soft)] rounded-full text-sm"
               >
                 {category.display_name || category.name}
               </span>
@@ -206,11 +206,11 @@ export default function StreamerDetail({
           </div>
         )}
 
-        <p className="text-gray-500 mt-4 whitespace-pre-wrap break-words">
+        <p className="text-[var(--foreground-soft)] mt-4 whitespace-pre-wrap break-words">
           {streamer.description}
         </p>
 
-        <div className="flex flex-wrap justify-center gap-3 mt-6 text-sm text-gray-400 items-center">
+        <div className="flex flex-wrap justify-center gap-3 mt-6 text-sm text-[var(--foreground-soft)] items-center">
           <div className="flex items-center gap-1">
             {platform === "youtube" && <YoutubeIcon />}
             {platform === "twitch" && <TwitchIcon />}
@@ -265,7 +265,7 @@ export default function StreamerDetail({
           href={streamer.channel_url || "#"}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block mt-6 px-6 py-2 bg-[#00C7AE] text-white rounded-full font-semibold hover:bg-[#00b19c] transition-colors"
+          className="inline-block mt-6 px-6 py-2 bg-[var(--primary)] text-white rounded-full font-semibold hover:bg-[var(--primary-hover)] transition-colors"
         >
           🔗 {platform.toUpperCase()} 채널 방문하기
         </a>

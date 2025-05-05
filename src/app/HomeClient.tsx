@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
 import { supabase } from "@/lib/supabaseClient";
 import { YoutubeStreamer } from "@/types/youtube";
@@ -21,7 +20,6 @@ import { ChzzkStreamerCard } from "@/components/streamer/ChzzkStreamerCard";
 import LoadingSpinner from "@/components/ui/LoadingSpinner";
 
 export default function HomeClient() {
-  const [isVisible, setIsVisible] = useState(false);
   const [categories, setCategories] = useState<string[]>([]);
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [selectedPlatform, setSelectedPlatform] = useState<string | null>(null);
@@ -102,26 +100,6 @@ export default function HomeClient() {
       }
     }
   }, [initialLoading]);
-
-  useEffect(() => {
-    const toggleVisibility = () => {
-      if (window.scrollY > 300) {
-        setIsVisible(true);
-      } else {
-        setIsVisible(false);
-      }
-    };
-
-    window.addEventListener("scroll", toggleVisibility);
-    return () => window.removeEventListener("scroll", toggleVisibility);
-  }, []);
-
-  const scrollToTop = () => {
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
 
   const toggleCategory = (category: string) => {
     setSelectedCategories((prev) =>
@@ -338,7 +316,7 @@ export default function HomeClient() {
       : [];
 
   return (
-    <main className="p-6 max-w-4xl mx-auto">
+    <main className="p-6 max-w-4xl mx-auto bg-[var(--background)] text-[var(--foreground)]">
       {initialLoading ? (
         <div className="flex justify-center items-center h-[70vh]">
           <LoadingSpinner text="로딩 중..." size="large" />
@@ -362,8 +340,8 @@ export default function HomeClient() {
               onClick={fetchStreamers}
               className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 min-w-[120px] ${
                 !selectedPlatform
-                  ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
-                  : "bg-black text-white dark:bg-gray-200 dark:text-black hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors cursor-pointer"
+                  ? "bg-[var(--button-disabled-bg)] text-[var(--button-disabled-text)] cursor-not-allowed"
+                  : "bg-[var(--button-bg)] text-[var(--button-text)] hover:bg-[var(--button-hover-bg)] transition-colors cursor-pointer"
               }`}
               disabled={loading || !selectedPlatform}
             >
@@ -402,19 +380,11 @@ export default function HomeClient() {
             )}
 
             {results.length === 0 && !loading && (
-              <p className="text-center text-gray-500 mt-8">
+              <p className="text-center text-[var(--foreground-soft)] mt-8">
                 조건에 맞는 스트리머가 없습니다.
               </p>
             )}
           </section>
-          {isVisible && (
-            <button
-              onClick={scrollToTop}
-              className="fixed bottom-6 right-6 w-12 h-12 bg-[#00C7AE] hover:bg-[#00b19c] text-white rounded-full shadow-lg flex items-center justify-center transition-colors cursor-pointer"
-            >
-              <ChevronUpIcon className="w-6 h-6" />
-            </button>
-          )}
         </>
       )}
     </main>

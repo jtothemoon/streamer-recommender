@@ -1,21 +1,54 @@
 @import "tailwindcss";
 
+/* ===== 🥇 전역 컬러 (페이지 기본) ===== */
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --background-soft: #f9f9f9; /* ✅ 추가: 라이트모드 카드 배경 */
+  --background-soft: #f9f9f9;
+  --background-soft-hover: #f0f0f0;
   --foreground-strong: #111111;
   --foreground-soft: #666666;
+
+  /* ===== 🥈 브랜드 컬러 ===== */
+  --primary: #00C7AE;
+  --primary-hover: #00b19c;
+  --youtube: #FF0000;
+  --twitch: #9146FF;
+  --chzzk: #00FFA3;
+
+  /* ===== 🥉 버튼 컬러 ===== */
+  --button-bg: black;
+  --button-hover-bg: #333;
+  --button-text: white;
+  --button-disabled-bg: #e0e0e0;
+  --button-disabled-text: #888;
+
+  /* ===== 🏅 보조 ===== */
+  --border-color: #ccc;
 }
 
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
-  --background-soft: #1a1a1a; /* ✅ 추가: 다크모드 카드 배경 */
+  --background-soft: #1a1a1a;
+  --background-soft-hover: #222;
   --foreground-strong: #ffffff;
   --foreground-soft: #aaaaaa;
-}
 
+  --primary: #00C7AE;
+  --primary-hover: #00b19c;
+  --youtube: #FF0000;
+  --twitch: #9146FF;
+  --chzzk: #00FFA3;
+
+  --button-bg: #e0e0e0;
+  --button-hover-bg: #ccc;
+  --button-text: #111;
+  --button-disabled-bg: #333;
+  --button-disabled-text: #aaa;
+
+  --border-color: #555;
+}
 
 @theme inline {
   --color-background: var(--background);
