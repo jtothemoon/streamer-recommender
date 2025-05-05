@@ -13,7 +13,7 @@ export default function Header() {
   };
 
   return (
-    <header className="w-full p-4 flex justify-between items-center bg-white dark:bg-[#111111] shadow-sm">
+    <header className="w-full p-4 flex justify-between items-center bg-[var(--background)] text-[var(--foreground)] shadow-sm">
       <Link
         href="/"
         onClick={handleLogoClick}

@@ -47,7 +47,7 @@ export default function RootLayout({
         <meta name="naver-site-verification" content="df38bd2f56d79d920740289ef8e966c6270711cf" />
         <meta name="msvalidate.01" content="AE558A915942DBD8D864DB77ACCD8C09" />
       </head>
-      <body className="flex flex-col min-h-screen font-sans text-[#111111] dark:text-gray-200 bg-white dark:bg-[#111111]">
+      <body className="flex flex-col min-h-screen font-sans bg-[var(--background)] text-[var(--foreground)]">
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>

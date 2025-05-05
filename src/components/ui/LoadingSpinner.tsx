@@ -9,7 +9,7 @@ export default function LoadingSpinner({ text = '로딩 중...', size = 'default
   
     return (
       <div className="flex justify-center items-center gap-2">
-        <div className={`${getSize()} border-2 border-black dark:border-white border-t-transparent rounded-full animate-spin`} />
+        <div className={`${getSize()} border-2 border-[var(--foreground)] border-t-transparent rounded-full animate-spin`} />
         {text && <span>{text}</span>}
       </div>
     );

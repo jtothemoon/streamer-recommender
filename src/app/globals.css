@@ -3,13 +3,19 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
-  --font-sans: 'Pretendard', Arial, Helvetica, sans-serif;
+  --background-soft: #f9f9f9; /* ✅ 추가: 라이트모드 카드 배경 */
+  --foreground-strong: #111111;
+  --foreground-soft: #666666;
 }
 
 .dark {
   --background: #0a0a0a;
   --foreground: #ededed;
+  --background-soft: #1a1a1a; /* ✅ 추가: 다크모드 카드 배경 */
+  --foreground-strong: #ffffff;
+  --foreground-soft: #aaaaaa;
 }
+
 
 @theme inline {
   --color-background: var(--background);
