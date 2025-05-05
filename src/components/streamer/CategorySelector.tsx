@@ -1,5 +1,7 @@
 "use client";
 
+import LoadingSpinner from "@/components/ui/LoadingSpinner";
+
 type Props = {
   categories: string[];
   selectedCategories: string[];
@@ -8,6 +10,7 @@ type Props = {
   onToggleCategory: (category: string) => void;
   onSelectPlatform: (platform: string | null) => void;
   //   onSelectGender: (gender: string | null) => void;
+  categoriesLoading: boolean; // 로딩 상태 추가
 };
 
 export function CategorySelector({
@@ -17,6 +20,7 @@ export function CategorySelector({
   //   selectedGender,
   onToggleCategory,
   onSelectPlatform,
+  categoriesLoading, // 로딩 상태 받기
 }: //   onSelectGender,
 Props) {
   return (
@@ -65,7 +69,14 @@ Props) {
       </div>
       {/* 카테고리 선택 */}
       <div>
-        <h2 className="text-lg font-semibold mb-2">🔍 카테고리 선택</h2>
+        <h2 className="text-lg font-semibold mb-2">
+          🔍 카테고리 선택
+          {categoriesLoading && (
+            <span className="ml-2 inline-block">
+              <LoadingSpinner text="" size="small" />
+            </span>
+          )}
+        </h2>
         <div className="flex flex-wrap gap-2">
           {categories.map((category) => (
             <button

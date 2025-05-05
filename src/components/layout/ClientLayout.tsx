@@ -5,6 +5,8 @@ import BetaBanner from "@/components/layout/BetaBanner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 
+import FloatingButtons from "@/components/ui/FloatingButtons";
+
 export default function ClientLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
@@ -15,6 +17,7 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
       <PageWrapper>
         <main className="flex-1">{children}</main>
       </PageWrapper>
+      <FloatingButtons />
       <Footer />
     </>
   );

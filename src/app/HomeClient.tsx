@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
 import { supabase } from "@/lib/supabaseClient";
 import { YoutubeStreamer } from "@/types/youtube";
 import { TwitchStreamer } from "@/types/twitch";
 import { ChzzkStreamer } from "@/types/chzzk";
-import { ChevronUpIcon } from "@heroicons/react/24/solid";
 
 import { fetchYoutubeCategories } from "@/utils/fetchYoutubeCategories";
 import { fetchTwitchCategories } from "@/utils/fetchTwitchCategories";
@@ -32,8 +32,23 @@ export default function HomeClient() {
   const [chzzkResults, setChzzkResults] = useState<ChzzkStreamer[]>([]); // 치지직 결과 상태 추가
 
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true); // 초기 로딩 상태 추가
+  const [categoriesLoading, setCategoriesLoading] = useState(false); // 카테고리 로딩 상태 추가
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // 초기 로딩 처리
+  useEffect(() => {
+    // 페이지 로드 시 초기 로딩 상태 설정
+    setInitialLoading(true);
+
+    // 컴포넌트 마운트 후 로딩 상태 해제
+    const timer = setTimeout(() => {
+      setInitialLoading(false);
+    }, 300); // 300ms 딜레이 (필요에 따라 조정)
+
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -241,6 +256,10 @@ export default function HomeClient() {
   // 플랫폼에 따라 카테고리 로드
   useEffect(() => {
     const loadCategories = async () => {
+      if (!selectedPlatform) return;
+      
+      setCategoriesLoading(true); // 로딩 시작
+      
       if (selectedPlatform === "youtube") {
         const data = await fetchYoutubeCategories();
         setCategories(data.map((c) => c.name));
@@ -252,8 +271,10 @@ export default function HomeClient() {
         const data = await fetchChzzkCategories();
         setCategories(data.map((c) => c.name));
       }
+      
+      setCategoriesLoading(false); // 로딩 완료
     };
-
+  
     if (selectedPlatform) {
       loadCategories();
     }
@@ -290,69 +311,83 @@ export default function HomeClient() {
 
   return (
     <main className="p-6 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">🎮 스트리머 추천 받기</h1>
+      {initialLoading ? (
+        <div className="flex justify-center items-center h-[70vh]">
+          <LoadingSpinner text="로딩 중..." size="large" />
+        </div>
+      ) : (
+        <>
+          <h1 className="text-3xl font-bold mb-6">🎮 스트리머 추천 받기</h1>
 
-      <CategorySelector
-        categories={categories}
-        selectedCategories={selectedCategories}
-        selectedPlatform={selectedPlatform}
-        onToggleCategory={toggleCategory}
-        onSelectPlatform={setSelectedPlatform}
-      />
+          <CategorySelector
+            categories={categories}
+            selectedCategories={selectedCategories}
+            selectedPlatform={selectedPlatform}
+            onToggleCategory={toggleCategory}
+            onSelectPlatform={setSelectedPlatform}
+            categoriesLoading={categoriesLoading} // 로딩 상태 전달
+          />
 
-      {/* 추천 버튼 */}
-      <div className="mt-8">
-        <button
-          onClick={fetchStreamers}
-          className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 min-w-[120px] ${
-            !selectedPlatform
-              ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
-              : "bg-black text-white dark:bg-gray-200 dark:text-black hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors cursor-pointer"
-          }`}
-          disabled={loading || !selectedPlatform}
-        >
-          {loading ? (
-            <LoadingSpinner text="추천 중..." size="small" />
-          ) : (
-            "추천 받기 🔎"
-          )}
-        </button>
-      </div>
-
-      {/* 결과 출력 */}
-      <section className="mt-10">
-        {results.length > 0 && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-            {selectedPlatform === "youtube" &&
-              youtubeResults
-                .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
-                .map((s) => <YoutubeStreamerCard key={s.id} streamer={s} />)}
-
-            {selectedPlatform === "twitch" &&
-              twitchResults
-                .sort((a, b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0))
-                .map((s) => <TwitchStreamerCard key={s.id} streamer={s} />)}
-            {selectedPlatform === "chzzk" &&
-              chzzkResults
-                .sort((a, b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0))
-                .map((s) => <ChzzkStreamerCard key={s.id} streamer={s} />)}
+          {/* 추천 버튼 */}
+          <div className="mt-8">
+            <button
+              onClick={fetchStreamers}
+              className={`px-6 py-2 rounded-lg flex items-center justify-center gap-2 min-w-[120px] ${
+                !selectedPlatform
+                  ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400 cursor-not-allowed"
+                  : "bg-black text-white dark:bg-gray-200 dark:text-black hover:bg-gray-800 dark:hover:bg-gray-300 transition-colors cursor-pointer"
+              }`}
+              disabled={loading || !selectedPlatform}
+            >
+              {loading ? (
+                <LoadingSpinner text="추천 중..." size="small" />
+              ) : (
+                "추천 받기 🔎"
+              )}
+            </button>
           </div>
-        )}
 
-        {results.length === 0 && !loading && (
-          <p className="text-center text-gray-500 mt-8">
-            조건에 맞는 스트리머가 없습니다.
-          </p>
-        )}
-      </section>
+          {/* 결과 출력 */}
+          <section className="mt-10">
+            {results.length > 0 && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                {selectedPlatform === "youtube" &&
+                  youtubeResults
+                    .sort((a, b) => (b.subscribers ?? 0) - (a.subscribers ?? 0))
+                    .map((s) => (
+                      <YoutubeStreamerCard key={s.id} streamer={s} />
+                    ))}
 
-      {isVisible && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 w-12 h-12 bg-[#00C7AE] hover:bg-[#00b19c] text-white rounded-full shadow-lg flex items-center justify-center transition-colors cursor-pointer"
-        >
-          <ChevronUpIcon className="w-6 h-6" />
-        </button>
+                {selectedPlatform === "twitch" &&
+                  twitchResults
+                    .sort(
+                      (a, b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0)
+                    )
+                    .map((s) => <TwitchStreamerCard key={s.id} streamer={s} />)}
+                {selectedPlatform === "chzzk" &&
+                  chzzkResults
+                    .sort(
+                      (a, b) => (b.viewer_count ?? 0) - (a.viewer_count ?? 0)
+                    )
+                    .map((s) => <ChzzkStreamerCard key={s.id} streamer={s} />)}
+              </div>
+            )}
+
+            {results.length === 0 && !loading && (
+              <p className="text-center text-gray-500 mt-8">
+                조건에 맞는 스트리머가 없습니다.
+              </p>
+            )}
+          </section>
+          {isVisible && (
+            <button
+              onClick={scrollToTop}
+              className="fixed bottom-6 right-6 w-12 h-12 bg-[#00C7AE] hover:bg-[#00b19c] text-white rounded-full shadow-lg flex items-center justify-center transition-colors cursor-pointer"
+            >
+              <ChevronUpIcon className="w-6 h-6" />
+            </button>
+          )}
+        </>
       )}
     </main>
   );
