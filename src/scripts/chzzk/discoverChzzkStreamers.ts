@@ -1,6 +1,6 @@
 import dotenv from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import { getLiveStreamers, ChzzkLiveChannel, ChzzkGame } from "./utils/streamers";
+import { getLiveStreamers, ChzzkLiveData, ChzzkGame } from "./utils/streamers";
 
 /**
  * 치지직 스트리머 발굴 스크립트
@@ -23,7 +23,7 @@ export async function discoverChzzkStreamers() {
 
   const args = process.argv.slice(2);
   let skipMapping = false;
-  let limit = 100; // 스트리머 수집 제한 (기본값 50명)
+  let limit = 100; // 스트리머 수집 제한 (기본값 100명)
 
   for (const arg of args) {
     if (arg === "--skip-mapping") {
@@ -35,11 +35,10 @@ export async function discoverChzzkStreamers() {
 
   // Supabase 치지직 스트리머 저장
   const upsertStreamer = async (
-    liveChannel: ChzzkLiveChannel
+    liveData: ChzzkLiveData
   ): Promise<string | null> => {
     const now = new Date().toISOString();
-    const channel = liveChannel.channel;
-    const stream = liveChannel.live;
+    const channel = liveData.channel;
 
     // chzzk_streamers 테이블에 스트리머 정보 저장
     const { data: insertedStreamer, error } = await supabase
@@ -48,11 +47,11 @@ export async function discoverChzzkStreamers() {
         chzzk_id: channel.channelId,
         login_name: channel.channelName,
         display_name: channel.channelName,
-        description: channel.channelDescription || null,
+        description: "", // API에 description 필드가 없음
         profile_image_url: channel.channelImageUrl || null,
         channel_url: `https://chzzk.naver.com/live/${channel.channelId}`,
-        viewer_count: stream.concurrentUserCount,
-        started_at: stream.openDate ? new Date(stream.openDate).toISOString() : null,
+        viewer_count: liveData.concurrentUserCount,
+        started_at: liveData.openDate ? new Date(liveData.openDate).toISOString() : null,
         created_at: now,
         updated_at: now,
       })
@@ -134,6 +133,15 @@ export async function discoverChzzkStreamers() {
     }
   };
 
+  // 게임 정보 생성 함수
+  const createGameInfo = (liveData: ChzzkLiveData): ChzzkGame => {
+    return {
+      id: liveData.liveCategory,
+      name: liveData.liveCategory.toLowerCase().replace(/\s+/g, ''),
+      displayName: liveData.liveCategoryValue
+    };
+  };
+
   const existingIds = new Set<string>();
 
   // 치지직 라이브 스트리머 조회
@@ -145,15 +153,14 @@ export async function discoverChzzkStreamers() {
   let mappingCount = 0;
 
   // 각 스트리머별 처리
-  for (const liveChannel of liveChannels) {
-    const channel = liveChannel.channel;
-    const stream = liveChannel.live;
+  for (const liveData of liveChannels) {
+    const channel = liveData.channel;
 
     // 이미 등록된 스트리머 확인
     const isExisting = existingIds.has(channel.channelId);
 
     // 스트리머 정보 저장
-    const streamerId = await upsertStreamer(liveChannel);
+    const streamerId = await upsertStreamer(liveData);
 
     if (!streamerId) continue;
 
@@ -165,13 +172,9 @@ export async function discoverChzzkStreamers() {
     }
 
     // 게임 정보가 있으면 카테고리 매핑
-    if (stream.liveCategory?.categoryId && !skipMapping) {
+    if (liveData.liveCategory && !skipMapping) {
       // 게임 정보 생성
-      const game: ChzzkGame = {
-        id: stream.liveCategory.categoryId,
-        name: stream.liveCategory.categoryName,
-        displayName: stream.liveCategory.categoryName
-      };
+      const game = createGameInfo(liveData);
 
       // 게임 카테고리 저장 또는 가져오기
       const categoryId = await getOrCreateGameCategory(game);

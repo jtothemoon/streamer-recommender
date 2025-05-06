@@ -1,64 +1,71 @@
 import { callChzzkApi } from './api';
 
 // 타입 정의
-export interface ChzzkStream {
-  liveId: string;
-  liveTitle: string;
-  status: string;
-  concurrentUserCount: number;
-  openDate: string;
-  liveCategory: {
-    categoryType: string;
-    categoryId: string;
-    categoryName: string;
-  };
-  thumbnail: {
-    thumbnailImageUrl: string;
-  };
-}
-
+// 치지직 채널 타입
 export interface ChzzkChannel {
   channelId: string;
   channelName: string;
-  channelImageUrl: string;
-  channelDescription: string;
-  followerCount: number;
+  channelImageUrl: string | null;
+  verifiedMark: boolean;
+  activatedChannelBadgeIds: string[];
 }
 
-export interface ChzzkLiveChannel {
+// 치지직 라이브 전체 데이터 타입
+export interface ChzzkLiveData {
+  liveId: string;
+  liveTitle: string;
+  liveImageUrl: string | null;
+  defaultThumbnailImageUrl: string | null;
+  concurrentUserCount: number;
+  accumulateCount: number;
+  openDate: string;
+  adult: boolean;
+  tags: string[];
+  categoryType: string;
+  liveCategory: string; 
+  liveCategoryValue: string;
   channel: ChzzkChannel;
-  live: ChzzkStream;
+  blindType: null | string;
 }
 
+// 게임 카테고리 타입
 export interface ChzzkGame {
   id: string;
   name: string;
   displayName?: string;
 }
 
+// API 응답 타입
+interface ChzzkApiResponse {
+  code: number;
+  message: string | null;
+  content: {
+    size: number;
+    page: {
+      next: {
+        concurrentUserCount: number;
+        liveId: number;
+      } | null;
+    };
+    data: ChzzkLiveData[];
+  };
+}
+
 /**
  * 치지직 라이브 스트리머 가져오기
  */
-export async function getLiveStreamers(limit: number = 50): Promise<ChzzkLiveChannel[]> {
-  const result: ChzzkLiveChannel[] = [];
-  let nextCursor: string | null = '';
+export async function getLiveStreamers(limit: number = 50): Promise<ChzzkLiveData[]> {
+  const result: ChzzkLiveData[] = [];
+  let nextCursor: {concurrentUserCount: number, liveId: number} | null = null;
   
   try {
-    while (nextCursor !== null && result.length < limit) {
-      const params: Record<string, string> = {};
-      if (nextCursor && nextCursor !== '') {
-        params.next = nextCursor;
-      }
-
-      interface ChzzkApiResponse {
-        code: number;
-        message: string;
-        content: {
-          streamingList: ChzzkLiveChannel[];
-          page: {
-            next: string | null;
-          };
-        };
+    while (result.length < limit) {
+      const params: Record<string, string | number> = {};
+      
+      // 페이지네이션 처리 - next 객체의 값들을 파라미터로 전달
+      if (nextCursor) {
+        params.concurrentUserCount = nextCursor.concurrentUserCount;
+        params.liveId = nextCursor.liveId;
       }
       
       const response = await callChzzkApi<ChzzkApiResponse>('/service/v1/lives', params);
@@ -67,17 +74,16 @@ export async function getLiveStreamers(limit: number = 50): Promise<ChzzkLiveCha
         throw new Error(`API 오류: ${response.message}`);
       }
       
-      const streamingList = response.content?.streamingList || [];
-      const nextPage = response.content?.page?.next || null;
+      const liveData = response.content?.data || [];
+      nextCursor = response.content?.page?.next;
       
-      result.push(...streamingList);
-      nextCursor = nextPage;
+      result.push(...liveData);
       
       // 로그
       console.log(`스트리머 ${result.length}/${limit} 조회 중...`);
       
       // 결과가 없거나 페이지네이션이 끝났으면 종료
-      if (streamingList.length === 0 || !nextCursor) {
+      if (liveData.length === 0 || !nextCursor) {
         break;
       }
     }
