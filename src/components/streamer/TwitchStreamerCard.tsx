@@ -3,6 +3,7 @@
 import { TwitchStreamer } from "@/types/twitch";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
 import TwitchIcon from "../icons/TwitchIcon";
 import FavoriteButton from "../ui/FavoriteButton";
 import { useTwitchLiveStatus } from "@/hooks/useTwitchLiveStatus";
@@ -18,6 +19,8 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
   const { status } = useTwitchLiveStatus([streamer.twitch_id]);
   const streamStatus = status?.[streamer.twitch_id];
   const isLive = streamStatus?.isLive || false;
+
+  const [thumbnailLoaded, setThumbnailLoaded] = useState(false);
 
   function formatViewers(count?: number | null) {
     if (!count) return "정보 없음";
@@ -41,16 +44,27 @@ export function TwitchStreamerCard({ streamer }: TwitchStreamerCardProps) {
           </span>
         </div>
       )}
-      {isLive && streamStatus?.thumbnailUrl && (
+      {isLive && (
         <div className="mt-3 mb-2 relative overflow-hidden rounded-lg w-full h-32">
-          <Image
-            src={streamStatus.thumbnailUrl
-              .replace("{width}", "320")
-              .replace("{height}", "180")}
-            alt="라이브 방송 썸네일"
-            fill
-            className="object-cover"
-          />
+          {streamStatus?.thumbnailUrl && (
+            <Image
+              src={streamStatus.thumbnailUrl
+                .replace("{width}", "320")
+                .replace("{height}", "180")}
+              alt="라이브 방송 썸네일"
+              fill
+              sizes="(max-width: 768px) 100vw, 320px" // sizes 속성 추가
+              className={`object-cover transition-opacity duration-300 ${
+                thumbnailLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              onLoad={() => setThumbnailLoaded(true)} // onLoadingComplete 대신 onLoad 사용
+            />
+          )}
+          {(!streamStatus?.thumbnailUrl || !thumbnailLoaded) && (
+            <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-[var(--twitch)] border-t-transparent rounded-full animate-spin" />
+            </div>
+          )}
         </div>
       )}
 
