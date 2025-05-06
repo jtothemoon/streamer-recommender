@@ -174,10 +174,10 @@ export async function getChannelDetails(channelId: string) {
 
     const latestUploadDate = new Date(publishedAt);
 
-    // 한 달 이내 업로드 확인
+    // 1주일 이내 업로드 확인 (1개월에서 변경)
     const daysSinceUpload = (Date.now() - latestUploadDate.getTime()) / (1000 * 60 * 60 * 24);
-    if (daysSinceUpload > 30) {
-      return { success: false, message: "최근 1개월 업로드 없음" };
+    if (daysSinceUpload > 7) {  // 30에서 7로 변경
+      return { success: false, message: "최근 1주일 업로드 없음" };  // 메시지도 변경
     }
 
     // 성공시 필요 정보 반환

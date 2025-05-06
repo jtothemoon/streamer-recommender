@@ -63,6 +63,8 @@ export default function FloatingButtons() {
   const buttonStyle =
     "w-12 h-12 bg-[#00C7AE] hover:bg-[#00b19c] text-white rounded-full shadow-lg flex items-center justify-center transition-colors cursor-pointer";
 
+  const FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSegLnmlFaHtf6Y4grtdOp_FFO7sM_4Eqesh4bN5s-BSQMI25g/viewform?usp=dialog";
+
   return (
     <>
       {/* 왼쪽 하단 메뉴 버튼 */}
@@ -98,7 +100,8 @@ export default function FloatingButtons() {
               {/* 구글폼 링크 */}
               <button
                 onClick={() => {
-                  showToast("피드백 기능은 현재 준비 중입니다.");
+                  window.open(FEEDBACK_FORM_URL, "_blank");
+                  showToast('피드백에 참여해 주셔서 감사합니다!');
                   setIsMenuOpen(false);
                 }}
                 className={`${buttonStyle} mb-3`}

@@ -1,0 +1,42 @@
+name: Youtube Streamers Workflow
+
+on:
+  schedule:
+    # 매주 월요일 새벽 4시 10분 (UTC+9 기준, UTC로는 일요일 19:10)
+    - cron: '10 19 * * 0'
+  workflow_dispatch: # 수동 실행 옵션
+
+jobs:
+  maintenance:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: 1. Check inactive/reactive streamers
+        run: npx ts-node --project tsconfig.scripts.json src/scripts/youtube/checkInactiveStreamers.ts
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      
+      - name: 2. Discover new streamers
+        run: npx ts-node --project tsconfig.scripts.json src/scripts/youtube/discoverYoutubeStreamers.ts
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          
+      - name: 3. Link streamers to categories
+        run: npx ts-node --project tsconfig.scripts.json src/scripts/youtube/linkYoutubeStreamerCategories.ts
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
