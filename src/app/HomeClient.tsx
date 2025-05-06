@@ -135,45 +135,56 @@ export default function HomeClient() {
     setChzzkResults([]); // 치지직 결과 초기화
 
     if (platform === "youtube") {
-      // 유튜브 스트리머 조회
-      let matchedStreamerIds: string[] = [];
-
+      // 유튜브 스트리머 조회 - 효율적인 접근법
       if (categories.length === 0) {
-        // 카테고리 미선택 시 전체 유튜브 스트리머 가져오기
-        const { data: allStreamers } = await supabase
+        // 카테고리 미선택 시 활성 상태인 모든 스트리머 가져오기
+        const { data } = await supabase
           .from("youtube_streamers")
-          .select("id");
-
-        matchedStreamerIds = (allStreamers ?? []).map((s) => s.id);
+          .select("*")
+          .eq("is_active", true)
+          .order("subscribers", { ascending: false });
+          
+        setYoutubeResults(data || []);
       } else {
-        // 카테고리 선택 시 해당 카테고리와 매핑된 스트리머만 가져오기
+        // 카테고리 선택 시
+        // 1. 카테고리 ID 조회
         const { data: categoryMatches } = await supabase
           .from("youtube_game_categories")
           .select("id")
           .in("name", categories);
-
-        const categoryIds = (categoryMatches ?? []).map((k) => k.id);
-
+          
+        if (!categoryMatches?.length) {
+          setLoading(false);
+          return;
+        }
+        
+        const categoryIds = categoryMatches.map(c => c.id);
+        
+        // 2. 매핑 테이블에서 스트리머 ID 조회
         const { data: mappings } = await supabase
           .from("youtube_streamer_categories")
           .select("streamer_id")
           .in("category_id", categoryIds);
-
-        matchedStreamerIds = (mappings ?? []).map((m) => m.streamer_id);
+          
+        if (!mappings?.length) {
+          setLoading(false);
+          return;
+        }
+        
+        const streamerIds = [...new Set(mappings.map(m => m.streamer_id))];
+        
+        // 3. 활성 상태인 스트리머만 최종 조회
+        const { data } = await supabase
+          .from("youtube_streamers")
+          .select("*")
+          .in("id", streamerIds)
+          .eq("is_active", true)
+          .order("subscribers", { ascending: false });
+          
+        setYoutubeResults(data || []);
       }
-
-      if (matchedStreamerIds.length === 0) {
-        setLoading(false);
-        return;
-      }
-
-      // 최종 스트리머 데이터 가져오기
-      const { data: finalStreamers } = await supabase
-        .from("youtube_streamers")
-        .select("*")
-        .in("id", matchedStreamerIds);
-
-      setYoutubeResults(finalStreamers || []);
+      
+      setLoading(false);
     } else if (platform === "twitch") {
       // 트위치 스트리머 조회
       let matchedStreamerIds: string[] = [];
