@@ -2,6 +2,8 @@ import "./globals.css";
 import { Metadata } from "next";
 import ClientLayout from "@/components/layout/ClientLayout";
 
+import ServiceClosedNotice from '@/components/ServiceClosedNotice';
+
 export const metadata: Metadata = {
   title: "Spick - 게임 스트리머 추천 서비스",
   description:
@@ -48,6 +50,7 @@ export default function RootLayout({
         <meta name="msvalidate.01" content="AE558A915942DBD8D864DB77ACCD8C09" />
       </head>
       <body className="flex flex-col min-h-screen font-sans bg-[var(--background)] text-[var(--foreground)]">
+        <ServiceClosedNotice />
         <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
